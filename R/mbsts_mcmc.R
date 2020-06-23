@@ -2,16 +2,57 @@
 ######################################################################################
 ####  Author:           Fiammetta Menchetti                                       ####
 ####                                                                              ####
-####  Date last update: 2020-03-06                                                ####
+####  Date last update: 2020-06-23                                                ####
 ####                                                                              ####
 ####  Content:          MCMC for a given MBSTS model                              ####
 ####                                                                              ####
-####  Main function :   mbsts_mcmc                                                ####
+####  Main function :   mbsts.mcmc                                                ####
 ####  Dependencies:     lpy.X , block.m                                           ####
 ####                                                                              ####
 ######################################################################################
 ######################################################################################
 
+
+#' MCMC for a given MBSTS model
+#'
+#' MCMC to sample from the joint posterior of model parameters in an mbsts model.
+#' For now, the case without contemporaneous predictors variables is not allowed.
+#' 
+#' @param Smodel A multivariate state space model of class 'SSModel'.
+#' @param X t x P matrix of predictors.
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
+#' @param nu0.k Degrees of freedom of the Inverse-Wishart prior for each Sigma_k. Set by default to n0.k = d + 2 where d is the number of time series in the multivariate model.
+#' @param s0.k Scale matrix of the Inverse-Wishart prior for each Sigma_k.
+#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.
+#' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
+#' @param niter Number of MCMC iteration.
+#' @param burn Desidered burn-in, set by default to 0.1 * niter.
+#' @param ping A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.
+#'
+#' @return An object of class 'mbsts' which is a list with the following components
+#' \describe{   
+#'   \item{eta.samples}{'niter' draws from the distribution of eta_k.}
+#'   \item{eps.samples}{'niter' draws from the distribution of eps.}
+#'   \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
+#'   \item{sigma.eta}{'niter' draws from the posterior distribution of Sigma_eta.}
+#'   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma_eps.}
+#'   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
+#'   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
+#'   \item{X}{?}
+#'   \item{y}{?}
+#'   \item{Z}{?}
+#'   \item{T}{?}
+#'   \item{R}{?}
+#'   \item{niter}{?}
+#'   \item{burn}{?}
+#' }
+#' @export
+#'
+#' @examples
+#' y <- cbind(rnorm(100), rnorm(100, 2, 3))
+#' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
+#' model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=4, Q = matrix(NA,2,2)))
+#' mcmc <- mbsts.mcmc(model, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
 mbsts.mcmc <- function(Smodel, X, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter, burn, 
     ping = NULL) {
@@ -22,7 +63,7 @@ mbsts.mcmc <- function(Smodel, X, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, 
     # Args:
     #   Smodel  : a multivariate state space model of class 'SSModel'
     #   X       : a T x N matrix of predictors
-    #   H       : desidered N x N variance-covariance matrix between regression coefficients.
+    #   H       : N x N variance-covariance matrix between regression coefficients.
     #             The default is Zellner's g-prior, H = (X'X)^(-1) 
     #   nu0.k   : degrees of freedom of the Inverse-Wishart prior for each Sigma_k.
     #             The default is the smallest integer such that the expectation of eta_k exists,
@@ -40,25 +81,18 @@ mbsts.mcmc <- function(Smodel, X, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, 
     #   An object of class 'mbsts' which is a list with the following components
     #
     #   Smodel      : Resulting 'SSModel' (is it really useful? maybe I can save only the needed matrices, Z,R,T) 
-    #   eta.samples : 'niter' draws from the distribution of each eta_k
+    #   eta.samples : 'niter' draws from the distribution of eta_k
     #   eps.samples : 'niter' draws from the distribution of eps
-    #   sigma.eta   : 'niter' draws from the posterior distribution of Sigma_eps
+    #   states.samples : draws from p(\alpha_t | Y_{1:T})
+    #   sigma.eta   : 'niter' draws from the posterior distribution of Sigma_eta
     #   sigma.eps   : 'niter' draws from the posterior distribution of Sigma_eps
-    #   Z           : niter x N selection matrix 
-    #   beta        : N x p x niter array containing the draws from the posterior distribution
+    #   Z           : 'niter' x N selection matrix 
+    #   beta        : N x p x 'niter' array containing the draws from the posterior distribution
     #                 of the regression coefficient matrix, p(beta | Sigma_eps, z)
+    #   ...         : maybe not needed
     
     ### Dimensionalities & other inputs
-    
-    # get dim
-    y <- Smodel$y
-    t <- dim(y)[1]  # number of time points
-    K <- dim(Smodel$R)[2]  # tot number of state disurbances
     p <- dim(y)[2]  # number of time series
-    k <- K/p  # number of state disturbances for each time series
-    M <- dim(Smodel$T)[1]  # tot number of states 
-    m <- M/p  # number of states for each time series
-    
     
     # set default H (Zellner's g-prior)
     if (is.null(H)) {
@@ -79,6 +113,22 @@ mbsts.mcmc <- function(Smodel, X, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, 
         nu0.eps <- p + 2
     }
     
+    # model definition
+    Smodel$H[, , 1] <- rInvWishart(1, df = nu0.eps, Sigma = s0.eps)[, , 1]
+    Q <- list()
+    for (i in 1:length(unique(attr(Smodel, "eta_types")))) {
+        Q[[i]] <- rInvWishart(1, df = nu0.k, Sigma = s0.k)[, , 1]
+    }
+    Q <- block.m(Q)
+    Smodel$Q[, , 1] <- Q
+    
+    # get dim
+    y <- Smodel$y
+    t <- dim(y)[1]  # number of time points
+    K <- dim(Smodel$R)[2]  # tot number of state disurbances
+    k <- K/p  # number of state disturbances for each time series
+    M <- dim(Smodel$T)[1]  # tot number of states 
+    m <- M/p  # number of states for each time series
     
     ### Empty arrays to store MCMC iterations
     eta.samples <- array(NA, c(nrow(y), K, niter - burn))
@@ -101,8 +151,6 @@ mbsts.mcmc <- function(Smodel, X, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, 
     ### MCMC
     
     for (i in 1:niter) {
-        
-        #if(seed){set.seed(seed)}
         
         # Monitoring status
         if (i %in% sequence) {

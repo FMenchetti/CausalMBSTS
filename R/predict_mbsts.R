@@ -2,7 +2,7 @@
 ######################################################################################
 ####  Author:           Fiammetta Menchetti                                       ####
 ####                                                                              ####
-####  Date last update: 2020-03-06                                                ####
+####  Date last update: 2020-06-23                                                ####
 ####                                                                              ####
 ####  Content:          Prediction of a given MBSTS model                         ####
 ####                                                                              ####
@@ -14,6 +14,28 @@
 ######################################################################################
 
 
+
+#' Prediction for a given multivariate Bayesian structural time series model
+#'
+#' Given an object of class 'mbsts' and 'newdata' provided in matrix form, this function
+#' provides in-sample forecasts and out-of-sample forecasts, both based on drawing
+#' from the posterior predictive distribution. Note that NA values are not allowed in 
+#' the new regressor matrix.
+#' 
+#' @param mbsts An object of class 'mbsts'.
+#' @param newdata Matrix of new data.
+#'
+#' @return Returns a list with the following components
+#' \describe{
+#'   \item{post.pred.0}{t x d x 'niter' array of in-sample forecasts.}
+#'   \item{post.pred.1}{S x d x 'niter' array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
+#'   \item{post.pred}{(t + S) x d x 'niter' array combining in- and out-of-sample forecasts.}
+#' }
+#' @export
+#'
+#' @examples
+#' newdata <- cbind(rnorm(30),rt(30, 2))
+#' pred <- predict.mbsts(mcmc, newdata)
 
 predict.mbsts <- function(mbsts, newdata) {
     
@@ -29,7 +51,7 @@ predict.mbsts <- function(mbsts, newdata) {
     # Value:
     #   post.pred.0 : T x p x niter array of in-sample forecasts
     #   post.pred.1 : S x p x niter array out-of-sample forecasts, where S is the number of
-    #                 of forecasted periods (set to the length of provided new data)
+    #                 forecasted periods (set to the length of provided new data)
     #   post.pred   : (T + S) x p x niter array combining in- and out-of-sample forecasts
     
     ### Dimensionalities & other objects
