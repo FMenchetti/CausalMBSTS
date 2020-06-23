@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1592930905478.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4279653243",
+    "id" : "2839327",
+    "lastKnownWriteTime" : 1592930863,
+    "last_content_update" : 1592930863,
+    "path" : "~/CausalMBSTS/man/predict.mbsts.Rd",
+    "project_path" : "man/predict.mbsts.Rd",
+    "properties" : {
+    },
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_doc"
+}

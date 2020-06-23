@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1592930888431.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3153336291",
+    "id" : "6178799B",
+    "lastKnownWriteTime" : 1592930863,
+    "last_content_update" : 1592930863,
+    "path" : "~/CausalMBSTS/man/causal.mbsts.Rd",
+    "project_path" : "man/causal.mbsts.Rd",
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_doc"
+}
