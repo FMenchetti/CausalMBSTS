@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593429118259.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "4CE7FA00",
+    "lastKnownWriteTime" : 1593428687,
+    "last_content_update" : 1593428687,
+    "path" : "~/CausalMBSTS/R/causal_mbsts.R",
+    "project_path" : "R/causal_mbsts.R",
+    "properties" : {
+        "cursorPosition" : "136,75",
+        "scrollLine" : "159"
+    },
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

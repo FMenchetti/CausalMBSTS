@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593423903891.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "70C45C25",
+    "lastKnownWriteTime" : 1593428842,
+    "last_content_update" : 1593428842957,
+    "path" : "~/CausalMBSTS/R/mbsts_mcmc.R",
+    "project_path" : "R/mbsts_mcmc.R",
+    "properties" : {
+        "cursorPosition" : "197,0",
+        "scrollLine" : "194"
+    },
+    "relative_order" : 7,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

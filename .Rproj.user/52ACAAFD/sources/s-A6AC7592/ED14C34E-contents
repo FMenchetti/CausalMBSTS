@@ -16,6 +16,7 @@
 #' MCMC for a given MBSTS model
 #'
 #' MCMC to sample from the joint posterior of model parameters in an mbsts model.
+#' For now, the case without contemporaneous predictors variables is not allowed.
 #'
 #' @param Smodel A multivariate state space model of class 'SSModel'.
 #' @param X t x P optional matrix of predictors.
@@ -52,14 +53,14 @@
 #' y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
 #'            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
 #'            rnorm(400, 5,1))
-#' model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-#' mcmc.1 <- mbsts.mcmc(model.1, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+#' model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
+#' mcmc <- mbsts.mcmc(model, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 #'
 #' ## Example 2 : local level + seasonal + covariates
 #' y <- cbind(rnorm(100), rnorm(100, 2, 3))
 #' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-#' model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
-#' mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+#' model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
+#' mcmc <- mbsts.mcmc(model, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
 mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter, burn,
                        ping = NULL) {
@@ -69,7 +70,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
   #
   # Args:
   #   Smodel  : a multivariate state space model of class 'SSModel'
-  #   X       : an optional T x N matrix of predictors
+  #   X       : a T x N matrix of predictors
   #   H       : N x N variance-covariance matrix between regression coefficients.
   #             The default is Zellner's g-prior, H = (X'X)^(-1)
   #   nu0.k   : degrees of freedom of the Inverse-Wishart prior for each Sigma_k.

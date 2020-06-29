@@ -5,13 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2599815487",
+    "hash" : "0",
     "id" : "390CC471",
-    "lastKnownWriteTime" : 1592931368,
-    "last_content_update" : 1592931368,
+    "lastKnownWriteTime" : 1593429160,
+    "last_content_update" : 1593429160,
     "path" : "~/CausalMBSTS/NAMESPACE",
     "project_path" : "NAMESPACE",
     "properties" : {
+        "cursorPosition" : "0,0",
+        "scrollLine" : "0"
     },
     "relative_order" : 2,
     "source_on_save" : false,
