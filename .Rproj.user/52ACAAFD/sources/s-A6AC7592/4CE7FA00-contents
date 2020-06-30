@@ -31,6 +31,7 @@
 #' @param y t x d matrix of observations.
 #' @param dates a vector of dates.
 #' @param int.date Date of the intervention.
+#' @param holi Optional vector of the same length as the time series, specifying the dates (if any) that should be excluded from the computation of the causal effect in the post period. The elements of the vector must be either 0 (the corresponding date is retained) or 1 (the corresponding date is excluded).
 #' @param horizon Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
 #' @param nu0.k Degrees of freedom of the Inverse-Wishart prior for each Sigma_k. Set by default to n0.k = d + 2 where d is the number of time series in the multivariate model.
@@ -45,28 +46,26 @@
 #' \description{
 #'   \item{mcmc}{An object of class 'mbsts'.}
 #'   \item{predict}{A list with the same components as those produced by the function 'predict.mbsts'}
-#'   \item{adj.series}{Observations in the analysis period excluding holidays.}
-#'   \item{adj.dates}{Dates in the analysis period excluding holidays.}
+#'   \item{y}{Observations in the analysis period excluding 'holi' (if provided).}
+#'   \item{dates}{Dates in the analysis period excluding 'holi' (if provided).}
 #'   \item{general}{General causal effect for all iterations.}
 #'   \item{general.effect}{the estimated average causal effect and a 95% credible interval.}
 #'   \item{mean.general}{pointwise effect (may be not necessary).}
 #'   \item{lower.general}{lower bound of the pointwise effect (may be not necessary).}
 #'   \item{upper.general}{Upper bound of the pointwise effect (may be not necessary).}
-#'   \item{original.series}{Original time series (may be not necessary).}
-#'   \item{original.dates}{Original dates (may be not necessary).}
 #' }
 #' @export
 #'
 #' @examples
 #' y <- cbind(rnorm(100), rnorm(100, 2, 3))
 #' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-#' dates <- seq(as.Date('2020-01-10'),as.Date('2020-01-10')+99), 1)
+#' dates <- seq(as.Date('2020-01-10'),as.Date('2020-01-10')+99, 1)
 #' int.date <- as.Date('2020-04-01')
 #' y[dates >= int.date, ] <- y[dates >= int.date, ]+2
 #' model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=4, Q = matrix(NA,2,2)))
 #' causal <- causal.mbsts(model, X = X, y = y, dates = dates, int.date = int.date, s0.eps = diag(2), s0.k = diag(2), niter = 100, burn = 10)
 
-causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, horizon = NULL, H = NULL, nu0.k = NULL, s0.k,
+causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, horizon = NULL, H = NULL, nu0.k = NULL, s0.k,
     nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
 
     # It estimates the general effect of an intervention in a multivariate time series
@@ -84,6 +83,8 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, horizon = NULL, H
     #   y        : time series of observations
     #   dates    : a vector of dates
     #   int.date : date of the intervention
+    #   holi     : Optional, 0-1 vector of the same length as the time series specifying whether 'dates[i]' should be included ('holi[i]' = 0) or excluded ('holi[i]' = 1)
+    #   horizon  : Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.
     #   H        : desidered N x N variance-covariance matrix between regression coefficients.
     #             The default is Zellner's g-prior, H = (X'X)^(-1)
     #   nu0.k    : degrees of freedom of the Inverse-Wishart prior for each Sigma_k.
@@ -138,9 +139,12 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, horizon = NULL, H
     y.diff <- y.post.rep - predict$post.pred.1
 
     # removing holidays
-    holi <- hol.dummy(dates[dates >= int.date])
-    y.diff <- y.diff[holi == 0, , ]
-    adj.dates <- dates[hol.dummy(dates) == 0]
+    holi <- holi[dates >= int.date]
+     if(!is.null(holi)){
+       y.diff <- y.diff[holi == 0, , ]
+       dates <- dates[holi == 0]
+       y <- y[holi ==0, ]
+     }
 
     # General causal effect
 
@@ -150,7 +154,7 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, horizon = NULL, H
         upper.bound <- list()
         joint.effect <- list()
         for (i in 1:length(horizon)) {
-            ind <- adj.dates[adj.dates >= int.date] <= horizon[i]
+            ind <- dates[dates >= int.date] <= horizon[i]
             mean.effect[[i]] <- apply(y.diff[ind, , ], c(1, 2), mean)
             lower.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.025)
             upper.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.975)
@@ -166,9 +170,11 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, horizon = NULL, H
             1, quantile, probs = 0.025), upper = apply(colMeans(y.diff), 1, quantile, probs = 0.975))
     }
 
-    return(list(mcmc = mbsts, predict = predict, adj.series = y[hol.dummy(dates) == 0, ], adj.dates = adj.dates,
-        general = y.diff, general.effect = joint.effect, mean.general = mean.effect, lower.general = lower.bound,
-        upper.general = upper.bound, original.series = y, original.dates = dates))
+    list <- list(mcmc = mbsts, predict = predict, y = y, dates = dates,
+                 general = y.diff, general.effect = joint.effect, mean.general = mean.effect, lower.general = lower.bound,
+                 upper.general = upper.bound)
+    class(list) <- "CausalMBSTS"
+    return(list)
 }
 
 #--------------------------------------------------------------------------------------

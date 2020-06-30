@@ -17,6 +17,11 @@
 #'
 #' MCMC to sample from the joint posterior of model parameters in an mbsts model.
 #'
+#' @import KFAS
+#' @importFrom CholWishart rInvWishart
+#' @importFrom CholWishart lmvgamma
+#' @importFrom Matrix bdiag
+#' @importFrom MixMatrix rmatrixnorm
 #' @param Smodel A multivariate state space model of class 'SSModel'.
 #' @param X t x P optional matrix of predictors.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
@@ -102,7 +107,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
   p <- dim(y)[2]  # number of time series
 
   # set default H (Zellner's g-prior)
-  if (!is.null(X) & is.null(H)) { print("nope")
+  if (!is.null(X) & is.null(H)) {
     H <- inv(crossprod(X))
   }
 

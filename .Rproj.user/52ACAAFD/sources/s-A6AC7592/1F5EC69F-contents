@@ -23,6 +23,7 @@
 #' regression component, then the new matrix of predictors 'newdata' must be provided.
 #' Note that NA values are not allowed in the new regressor matrix.
 #'
+#' @importFrom MASS mvrnorm
 #' @param mbsts An object of class 'mbsts'.
 #' @param steps.ahead An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
 #' @param newdata Optional matrix of new data. Only required when 'mbsts' contains a regression component.

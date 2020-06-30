@@ -10,6 +10,7 @@ causal.mbsts(
   y,
   dates,
   int.date,
+  holi = NULL,
   horizon = NULL,
   H = NULL,
   nu0.k = NULL,
@@ -31,6 +32,8 @@ causal.mbsts(
 \item{dates}{a vector of dates.}
 
 \item{int.date}{Date of the intervention.}
+
+\item{holi}{Optional vector of the same length as the time series, specifying the dates (if any) that should be excluded from the computation of the causal effect in the post period. The elements of the vector must be either 0 (the corresponding date is retained) or 1 (the corresponding date is excluded).}
 
 \item{horizon}{Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.}
 
@@ -66,7 +69,7 @@ computed accordingly).
 \examples{
 y <- cbind(rnorm(100), rnorm(100, 2, 3))
 X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-dates <- seq(as.Date('2020-01-10'),as.Date('2020-01-10')+99), 1)
+dates <- seq(as.Date('2020-01-10'),as.Date('2020-01-10')+99, 1)
 int.date <- as.Date('2020-04-01')
 y[dates >= int.date, ] <- y[dates >= int.date, ]+2
 model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=4, Q = matrix(NA,2,2)))

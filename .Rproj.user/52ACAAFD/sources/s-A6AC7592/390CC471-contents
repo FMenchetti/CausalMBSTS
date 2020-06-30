@@ -3,3 +3,4 @@
 S3method(predict,mbsts)
 export(causal.mbsts)
 export(mbsts.mcmc)
+import(KFAS)

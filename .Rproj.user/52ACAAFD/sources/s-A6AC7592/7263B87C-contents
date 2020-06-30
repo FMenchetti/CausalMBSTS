@@ -1,0 +1,473 @@
+######################################################################################
+######################################################################################
+####  Author: Fiammetta Menchetti                                                 ####
+####  Date last update: 2020-03-24                                                ####
+####                                                                              ####
+####           CAUSAL EFFECT OF A PERMANENT PRICE REBATE ON THE SALES             ####
+####                  OF REBATED PRODUCTS AND RELATED                             ####
+####                    - Univariate C-SARIMA models  -                           ####
+####                                                                              ####
+######################################################################################
+######################################################################################
+
+rm(list=ls())
+setwd("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopUni")
+
+######################################################################################
+### Loading required libraries
+######################################################################################
+
+library(tseries)
+library(forecast)
+library(KFAS)
+library(tsoutliers)
+library(CausalImpact)
+library(expm) 
+library(timeDate)
+library(xtable)
+
+######################################################################################
+#  Functions
+######################################################################################
+
+source('C:/Users/fiamm/Documents/Dottorato/Tesi/mixed-functions.R')
+source('C:/Users/fiamm/Documents/Dottorato/Tesi/SARIMA-CAUSAL.R')
+source('C:/Users/fiamm/Documents/Dottorato/Tesi/TSA-SARIMA-20171010.R')
+
+######################################################################################
+#  Intervention date
+######################################################################################
+
+int.date<-as.Date("2018-10-04", format="%Y-%m-%d")
+
+######################################################################################
+#  Importing data & sanity checks
+######################################################################################
+
+# Get data
+data.raw<-read.csv("raw.cookies.csv", header=T, sep=";")
+TP<-read.table("TP.na.csv", header=T, sep=" ")
+TP.mod.price<-read.table("TP.modprice.csv", header=T, sep=" ")
+TP.price<-read.table("TP.price.csv",header=T, sep=" ")
+SP<-read.table("SP.na.csv", header=T, sep=" ")
+SP.price<-read.table("SP.price.csv", header = T, sep=" ")
+OL<-read.table("OL.na.csv", header=T, sep=" ")
+OL.price<-read.table("OL.price.csv",header=T,sep=" ")
+dates<-as.Date(read.table("tidy.cookies.csv", header=T, sep=" ")[,1], "%Y-%m-%d")
+
+# Checking for negative or zero sales 
+sales<-list(TP, SP, OL)
+
+for(i in 1:length(sales)){
+  if(sum(sales[[i]] <0, na.rm = T)>0){
+    print("In series ",i," N. of negative sales is ", paste(sum(sales[[i]] <0)))
+    
+  }
+  if(sum(sales[[i]] == 0, na.rm=T)>0){
+    print(paste("In series ",i, " N. of '0' sales is ", sum(sales[[i]] ==0)))
+    for(j in 1:ncol(sales[[i]])){
+      ind<-which(sales[[i]][,j]==0)
+      sales[[i]][ind,j]<-1
+    }
+  }
+}
+
+# Comment : no negative or zero sales
+
+# dummies
+sat<-day.dummy(dates)[,2]
+sun<-day.dummy(dates)[,3]
+mon<-day.dummy(dates)[,4]
+tue<-day.dummy(dates)[,5]
+wed<-day.dummy(dates)[,6]
+thr<-day.dummy(dates)[,7]
+hol<-hol.dummy(dates, add=F, lags = c(1,1))
+
+# Sundays in December and last week of November need a second dummy
+ind<-weekdays(dates)=="domenica" & format(dates,"%m")=="12" | 
+     weekdays(dates)=="domenica" & dates %in% c(as.Date("2017-11-26"),as.Date("2018-11-25")) 
+dec.sun<-rep(0, times=length(sun))
+dec.sun[ind]<-1
+
+# 'hol.dummy' creates a dummy for Italian holidays
+# I include manually San Giovanni holiday (all shops in Florence are closed on that day)
+ind<-which(dates == "2018-06-24")
+hol[ind-1]<-1 ; hol[ind+1]<-1
+
+
+# Average market segment price
+treat<-gsub(colnames(TP),pattern = "pezzi.",replacement = "")
+coop.other<-gsub(colnames(OL),pattern = "pezzi.",replacement = "")
+
+avg.price<-matrix(NA,nrow=nrow(OL),ncol=ncol(OL))
+for(i in 1:ncol(OL)){ 
+  sg.other<-unique(data.raw[data.raw$Cod.Magazzino.Articolo == coop.other[i],"Segmento"])
+  v<-c()
+  for(j in 1:ncol(TP)){
+    sg.treat<-unique(data.raw[data.raw$Cod.Magazzino.Articolo == treat[j],"Segmento"])
+    if(sg.other == sg.treat){v<-cbind(v,TP.price[,j])
+    } else {v<-v}
+  }
+  avg.price[,i]<-apply(v,1,mean)  
+}
+
+# ----------- change dependent variable here ---------------------------------------
+
+list.cookies<-list(TP=TP,SP=SP,OL=OL)
+
+#-----------------------------------------------------------------------------------
+
+#####################################################################################
+# Descriptive analysis 
+#####################################################################################
+
+# N.B To produce reports for Coop use : 
+#nomi.treat<-c("PANNA COOP","UOVO COOP","GRANELLA COOP","RISO LATTE COOP", 
+#"CACAO NOCC. COOP", "PANNA CACAO COOP","GOCCE CIOC. COOP", 
+#"CEREALI BIO", "COOP VV FIBRA", "FIOCCHI ORZO COOP", "PETIT COOP")
+
+list.prices<-list(TP.price, SP.price,OL.price)
+stat<-list()
+
+for(i in 1:length(list.cookies)){
+  y<-list.cookies[[i]]
+  p<-list.prices[[i]]
+  
+  ### Stats
+  stats<-matrix(NA,ncol(y),5)
+  colnames(stats)<-c("mean","sd","max","min","median")
+  rownames(stats)<-colnames(y)
+  
+  stats[,1]<-apply(y,2,FUN=mean,na.rm=T)
+  stats[,2]<-apply(y,2,FUN=sd,na.rm=T)
+  stats[,3]<-apply(y,2,FUN=max,na.rm=T)
+  stats[,4]<-apply(y,2,FUN=min,na.rm=T)
+  stats[,5]<-apply(y,2,FUN=median,na.rm=T)
+  
+  stat[[i]]<-stats
+  
+  ### Plots
+  par(mar=c(2,2,1.5,1.5))
+  if(i==1){par(mfrow=c(6,3))} else {par(mfrow=c(6,4))}
+  
+  window<-dates >= dates[1]
+  # window<-dates > as.Date("2018-01-01" ,format = "%Y-%m-%d") To plot just one piece of the series
+  
+  for (j in 1:ncol(y)){ 
+    
+    # Time series of units sold
+    main<-j    #main<-nomi.treat[i]
+    plot(y = y[,j][window], x = as.Date(dates[window], format = "%Y-%d-%m"), 
+         type = "l", xlab = "", ylab = "Units sold", main = main)
+    abline(v = int.date, col="red")
+    
+    # Time series of price 
+    plot(y = p[,j][window], x = as.Date(dates[window], format = "%Y-%d-%m"), 
+         type = "l", xlab = "", ylab = "Price", main = "Price")
+    abline(v = int.date, col="red")
+    
+    if(i==2){
+      p.relative<-p[,j]/list.prices[[1]][,j]
+      plot(y = p.relative[window], x = as.Date(dates[window], format = "%Y-%d-%m"), 
+         type = "l", xlab = "", ylab = "", main = paste("Relative Price wrt TP",j))
+      abline(v = int.date, col="red")
+    }
+    
+    if(i==3){
+      p.relative<-p[,j]/avg.price[,j]
+      plot(y = p.relative[window], x = as.Date(dates[window], format = "%Y-%d-%m"), 
+           type = "l", xlab = "", ylab = "", main = "Relative Price wrt market segment")
+      abline(v = int.date, col="red")
+    }
+    
+    # Acf
+    Acf(y[,j], main = main)
+    title("Acf",line=0.5)
+    
+  }
+}
+
+#####################################################################################
+# Causal effect estimation through C-SARIMA
+#####################################################################################
+
+### Model estimation
+
+# C-SARIMA models are fitted independently to each time series, the external regressors
+# include the dummy variables for holidays and the price.
+# However, since the price of target products is the variable absorbing the intervention,
+# we will consider here a modified version of price that after the intervention date
+# is held constant to the value registered the day before. 
+# The models are fitted to the data before intervention. The function below loops over
+# the [prod] subgroups (TP's, SP's and OL's) and over each cookie [i] 
+
+list.prices<-list(TP.mod.price, SP.price, OL.price)
+
+for(prod in 1:length(list.cookies)){
+
+# defining y and price  
+y<-log(list.cookies[[prod]])
+price<-log(list.prices[[prod]])
+
+# empty objects to store results
+est<-list()
+model<-list()
+
+# loop 
+par(mar=c(2,2,1.5,1.5))
+par(mfrow=c(6,4))
+ for(i in 1:ncol(y)){ print(i)
+   xreg=cbind(price=price[,i], hol=hol, dec.sun = dec.sun) 
+              #sat = sat, sun = sun, 
+              #mon = mon, tue = tue, wed = wed, thr = thr)
+   #if(i !=9){
+     model[[i]]<-auto(y[,i], D=1, d=0, frequency=7, max.p = 5, max.q=5, dates=dates, 
+                      xreg = xreg , ic="bic", int.date = int.date, names= i,plot=T)
+   #} else {model[[i]]<-auto(y[,i], D=0, d=0, frequency=7, max.p = 5, max.q=5, dates=dates, 
+                            #xreg = xreg , ic="bic", int.date = int.date, names= i,plot=T, approx = F)}
+   est[[i]]<-model[[i]]$estimates
+ }
+ 
+ saveRDS(model, file = paste("model-NA",names(list.cookies)[prod],".rds", sep=""))
+ saveRDS(est, file = paste("est-NA",names(list.cookies)[prod],".rds", sep=""))
+  
+}
+
+
+### Causal effect computation
+
+# We estimate the causal effect of the permanent price rebate on the sales of TP's, SP's
+# and OL's at three different time horizons. The function below loops over the 
+# the three subgrups [prod], the 11-10-11 cookies in each subgroup [i] and, finally, 
+# over the three time horizons [j]
+
+# Horizons
+horizon<-c("2018-11-04","2019-01-04","2019-04-30")
+
+# Loop 
+
+for(prod in 1:length(list.cookies)){
+
+# defining y and price & reading estimated model 
+y<-log(list.cookies[[prod]])
+price<-log(list.prices[[prod]])
+model<-readRDS(file=paste("model-",names(list.cookies)[prod],".rds",sep=""))
+
+# empty object to store results    
+causal<-array(NA,c(ncol(y),6,3))
+rownames(causal)<-colnames(y)
+colnames(causal)<-c("mean","lower","upper","sum","lower","upper")
+
+par(mfrow=c(6,6))
+for(i in 1:ncol(y)){
+  for(j in 1:length(horizon)){
+    ind2<-as.Date(dates, format="%Y-%m-%d") <= as.Date(horizon[j])
+    dates2<-dates[ind2]
+    xreg=cbind(price=price[ind2,i], hol = hol[ind2])
+    c.model<-arima.causal(y[ind2,i],dates2,int.date,7,xreg = xreg, model=model[[i]],  
+                          names=i, window="2018-07-01")            
+    causal[i,,j]<-c.model$effect
+  }
+ }
+
+saveRDS(causal, file = paste("causalD0-",names(list.cookies)[prod],".rds", sep=""))
+
+}
+
+#####################################################################################
+# Causal effect estimation through SARIMA
+#####################################################################################
+
+# Creating an intervention dummy
+ind<-dates>=int.date
+intervention<-c(rep(0,times=sum(!ind)),rep(1,times=sum(ind)))
+
+# SARIMA estimation
+
+for(prod in 1:length(list.cookies)){
+  
+  # defining y and price  
+  y<-log(list.cookies[[prod]])
+  price<-log(list.prices[[prod]])
+  
+  # empty object to store results
+  beta<-array(NA, c(ncol(y), 3, 3))
+  n.bic<-matrix(NA,nrow=ncol(y),ncol=3)
+  
+  par(mar=c(2,2,1.5,1.5))
+  par(mfrow=c(6,4))
+  for(i in 1:ncol(y)){ print(i)
+    for(j in 1:length(horizon)){
+      print(horizon[j])
+      int<-dates<=horizon[j]
+      xreg=cbind(hol=hol[int], intervention=intervention[int], price = price[int,i], sat=sat[int], sun=sun[int], mon = mon[int], tue = tue[int], wed = wed[int], thr = thr[int])
+      model<-auto.arima(y[int,i], D=0, max.p = 5, max.q = 5, ic="bic", xreg=xreg)
+      index<-grep("intervention",attr(model$var.coef, "dimnames")[[1]])
+      n.bic[i,j]<-model$bic
+      beta[i,1,j]<-exp(model$coef[index])
+      beta[i,2:3,j]<-exp(confint(model)[index,])
+    }
+  }
+  saveRDS(beta, file = paste("betaD0-",names(list.cookies)[prod],".rds", sep=""))
+  saveRDS(n.bic, file = paste("bicD0-",names(list.cookies)[prod],".rds", sep=""))
+}
+
+#####################################################################################
+# Confronto tra i vari modelli
+#####################################################################################
+
+### Modelli a confronto
+m1<-readRDS("model-NA-SP.rds")
+m2<-readRDS("model-SP.rds")
+m3<-readRDS("modelD0-SP-NA.rds")
+m4<-readRDS("modelD0-SP.rds")
+
+list<-list(m1 = m1, m2 = m2, m3 = m3, m4 = m4)
+# BIC & p.value Ljung-Box 
+
+bic<-matrix(NA, 11,length(list))
+p.value<-matrix(NA, 11,length(list))
+colnames(bic)<-names(list) ; colnames(p.value)<-names(list)
+for(i in 1:length(list)){
+  m<-list[[i]]
+  for(j in 1:length(m)){
+    bic[j,i]<-m[[j]]$fit$bic
+    df<-sum(m[[j]]$order)
+    p.value[j,i]<-Box.test(m[[j]]$fit$residuals, type="Ljung-Box", fitdf=df, lag=(df+1))$p.value
+  }
+}
+
+# LB test with maxdf = max(np) where np = max(order) computed across the models for each j 
+p.value.2<-matrix(NA, length(list[[1]]),length(list))
+for(j in 1:length(list[[1]])){
+  np<-sum(list$m1[[j]]$order)
+  for(i in 2:length(list)){
+    np<-append(np,sum(list[[i]][[j]]$order))
+  }
+  max.df<-max(np) 
+  for(i in 1:length(list)){
+    m<-list[[i]]
+    p.value.2[j,i]<-Box.test(m[[j]]$fit$residuals, type="Ljung-Box", fitdf=max.df, lag=(max.df+1))$p.value
+  }
+  
+}
+
+# LB test with maxdf = max(np) where np = max(order) computed across the all models all j 
+p.value.3<-matrix(NA, length(list[[1]]),length(list))
+sum.order<-c()
+np<-c()
+for(i in 1:length(list)){
+  m<-list[[i]]
+  for(j in 1:length(m)){
+    sum.order[j]<-c(sum(m[[j]]$order))
+  }
+  np<-append(np, sum.order)
+}
+
+max.df<-max(np)
+for(i in 1:length(list)){
+  m<-list[[i]]
+  for(j in 1:length(m)){
+    p.value.3[j,i]<-Box.test(m[[j]]$fit$residuals, type="Ljung-Box", fitdf=max.df, lag=(max.df+1))$p.value
+  }
+}
+
+# Ordine
+ord<-matrix(NA, 11,length(list))
+colnames(ord)<-names(list)
+for(i in 1:length(list)){
+  m<-list[[i]]
+  for(j in 1:length(m)){
+    o<-m[[j]]$order
+    ord[j,i]<-paste("(",o[1],o[2],o[3],")","(",o[4],o[5],o[6],")", sep="")
+  }
+}
+
+# Outliers 
+
+# TABELLA CON TUTTE LE OSSERVAZIONI
+tp<-readRDS("modelD0-TP-NA.rds")
+sp<-readRDS("modelD0-SP-NA.rds")
+ol<-readRDS("modelD0-OL-NA.rds")
+
+m.list<-list(tp=tp, sp=sp, ol=ol)
+
+for(i in 1:length(m.list)){
+  res<-m.list[[i]][[1]]$fit$residuals
+  fitted<-m.list[[i]][[1]]$fit$fitted
+  dat<-data.frame(res,fitted)
+  colnames(dat)<-c(paste("res.",names(m.list)[i],1,sep=""), paste("fitted.",names(m.list)[i],1,sep=""))
+  for(j in 2:length(m.list[[i]])){
+    res<-m.list[[i]][[j]]$fit$residuals
+    fitted<-m.list[[i]][[j]]$fit$fitted
+    dat2<-data.frame(res,fitted)
+    colnames(dat2)<-c(paste("res.",names(m.list)[i],j, sep=""), paste("fitted.",names(m.list)[i],j, sep=""))
+    dat<-data.frame(dat,dat2)
+  }
+  write.table(dat, paste("res.",names(m.list)[i],".csv",sep=""))
+}
+
+write.table(data.frame(read.csv("res.tp.csv", header=T,sep=" "), 
+                       read.csv("res.sp.csv", header=T,sep=" "),
+                       read.csv("res.ol.csv", header=T,sep=" ")), "m3_res.txt")
+m3.res<-read.table("m3_res.txt")
+
+write.table(data.frame(Date=dates[dates<int.date], Weekday=weekdays(dates[dates<int.date]), m4.res), "m4_res.txt")
+
+store.values<-as.data.frame(matrix(NA,nrow=220,ncol=5))
+colnames(store.values)<-c("Item","Date","Weekday","Value","Fitted")
+for(j in 1:length(modeld0)){
+  l<-list()
+  res<-abs(modeld0[[j]]$fit$residuals)
+  res.order<-res[order(res,decreasing = T)][1:20]
+  store.values[((j-1)*20+1):(j*20),1]<-rep(j,20)
+  store.values[((j-1)*20+1):(j*20),2]<-dates[1:398][res %in% res.order]
+  store.values[((j-1)*20+1):(j*20),3]<-weekdays(dates[1:398][res %in% res.order])
+  store.values[((j-1)*20+1):(j*20),4]<-modeld0[[j]]$fit$x[res %in% res.order]
+  store.values[((j-1)*20+1):(j*20),5]<-modeld0[[j]]$fit$fitted[res %in% res.order]
+}
+store.values[,2]<-as.Date(store.values[,2])
+
+write.table(store.values,"ol-out-modeld0.txt")
+
+dat.tp<-read.table("tp-out-modeld0.txt")[,c("Item","Date","Value")]
+dat.sp<-read.table("sp-out-modeld0.txt")[,c("Item","Date","Value")]
+dat.ol<-read.table("ol-out-modeld0.txt")[,c("Item","Date","Value")]
+
+
+dat.tp<-reshape(data = dat.tp, direction = "wide",idvar = "Date", timevar = "Item")
+colnames(dat.tp)<-gsub(colnames(dat.tp),pattern="Value",replacement = "res.tp")
+dat.sp<-reshape(data = dat.sp, direction = "wide",idvar = "Date", timevar = "Item")
+colnames(dat.sp)<-gsub(colnames(dat.sp),pattern="Value",replacement = "res.sp")
+dat.ol<-reshape(data = dat.ol, direction = "wide",idvar = "Date", timevar = "Item")
+colnames(dat.ol)<-gsub(colnames(dat.ol),pattern="Value",replacement = "res.ol")
+
+merged<-merge(dat.tp, dat.sp, 
+              by="Date", sort = T, all.x = T, all.y = T)
+merged<-merge(merged, dat.ol, by = "Date", sort=T, all.x=T, all.y = T)
+
+tab<-merged
+tab<-as.data.frame(apply(tab[,-1],2,as.numeric))
+model.tp<-readRDS("modelD0-TP.rds")
+model.sp<-readRDS("modelD0-SP.rds")
+model.ol<-readRDS("modelD0-OL.rds")
+
+### Prova
+tab2<-tab
+ind<-which(is.na(tab2$res.tp.1))
+res<-model.tp[[1]]$fit$residuals[ind]
+tab2$res.tp.1[ind]<-res
+
+### Ciclo
+tab3<-tab 
+l<-list(tp=model.tp,sp=model.sp,ol=model.ol)
+
+for(i in 1:length(l)){ print(names(l)[i])
+  for(j in 1:length(l[[i]])){ print(j)
+    ind<-which(is.na(tab3[,paste("res.",names(l)[i],".",j,sep="")]))
+    res<-l[[i]][[j]]$fit$residuals[ind]
+    tab3[,paste("res.",names(l)[i],".",j,sep="")][ind]<-res
+  }
+}
+
+write.table(data.frame(merged$Date,tab3),"Outliers-tab-full.txt")

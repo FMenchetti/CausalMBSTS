@@ -1,0 +1,595 @@
+######################################################################################
+######################################################################################
+####  Author:           Fiammetta Menchetti                                       ####
+####                                                                              ####
+####  Date last update: 2020-03-06                                                ####
+####                                                                              ####
+####  Content:          function used for the paper:                              ####
+####                    [Modeling interference in panel settings with MBSTS]      ####
+####                                                                              ####
+####  Main function :   coop_multi_effects, coop_multi_plot, coop_table           ####
+####  Dependencies:     mbsts_mcmc, predict_mbsts, causal_mbsts                   ####
+####                                                                              ####
+######################################################################################
+######################################################################################
+
+######################################################################################
+## Fuction to estimate joint, conditional and marginal effects in our setting
+######################################################################################
+
+coop_multi_effects<-function(Smodel, X, y, dates, int.date, horizon = NULL, H = NULL, nu0.k = NULL, s0.k,
+                        nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL){
+
+  # Estimates the joint, conditional and marginal effects for the empirical
+  # analysis of the paper: [Modeling interference in panel settings with MBSTS]
+  #
+  # Joint effect: among all the possible combinations of joint effects, we want to
+  # estimate tau = Y(1,0) - Y(0,0), where Y(1,0) is the observed multivariate outcome
+  # and Y(0,0) is forecasted through MBSTS;
+  #
+  # Conditional effect: we want to estimate the conditional effect on the store brands when
+  # competitor brands are discounted too, i.e. tau = Y(1,1) - Y(0,1) where both Y(1,1)
+  # and Y(0,1) are forecasts. In particular, to estimate Y(1,1) we need to include as predictors
+  # the discounted price for both products, whereas to estimate Y(0,1), we include as predictors
+  # the modified price for the store brands and the discounted price for the competitor;
+  #
+  # Marginal effect: this is the effect of treatment on the store brands, whatever
+  # intervention is applied to the competitor brand, i.e. tau = 2*(Y(1,1) + Y(1,0) - Y(0,0)  - Y(0,1))
+
+  # Args: same arguments as causal_mbsts, but X must be a list of regressor matrices.
+  #       They should also follow a specific order: X[[1]] predicts Y(0,0),
+  #       X[[2]] predicts Y(1,1) and X[[3]] predicts Y(0,1)
+
+  pred<-list()
+  mcmc<-list()
+
+  for(i in 1:length(X)){
+
+    ### STEP 1. Dividing pre and post periods
+    ind<-dates < int.date
+    X.pre  <-X[[i]][ind,]
+    y.pre  <-y[ind,]
+    y.post <-y[!ind,]
+
+    # Estimating the model only in the pre-period
+    Smodel$y<-y.pre
+    attr(Smodel,"n")<-as.integer(nrow(y.pre))
+
+    ### STEP 2. MCMC
+    mbsts<-mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.k = nu0.k, s0.k = s0.k, nu0.eps = nu0.eps,
+                      s0.eps = s0.eps, niter=niter, burn=burn, ping=ping)
+    mcmc[[i]]<-mbsts
+
+    ### STEP 3. In- and out-of-sample forecasts from the ppd
+    X.post<-X[[i]][!ind,]
+    pred[[i]]<-predict.mbsts(mbsts, X.post)
+
+  }
+
+  ### STEP 4. Causal effects estimation
+  p<-dim(mbsts$y)[2]
+  burn<-mbsts$burn
+  y.10<-array(y.post, c(nrow(y.post),ncol(y.post),niter-burn))
+  y.00<-pred[[1]]$post.pred.1
+  y.11<-pred[[2]]$post.pred.1
+  y.01<-pred[[3]]$post.pred.1
+
+  marginal<- 2*(y.11 + y.10 - y.00  - y.01)
+  avg.marginal <-(y.11 + y.10 - y.00  - y.01)/2
+  jjoint<-y.10 - y.00
+  conditional<-y.11-y.01
+
+  # removing holidays
+  holi<-hol.dummy(dates[dates>=int.date])
+  marginal<-marginal[holi==0,,]
+  avg.marginal<-avg.marginal[holi==0,,]
+  jjoint<-jjoint[holi==0,,]
+  conditional<-conditional[holi==0,,]
+  adj.dates<-dates[hol.dummy(dates)==0]
+
+  # if(length(horizon)>0) compute the pointwise and the average effects at all different horizons
+  # otherwise compute the effects at the end of the analysis period
+
+  # Marginal and average marginal causal effect
+  if(length(horizon)>0){ mean<-list(); lbound<-list(); ubound<-list(); temp.avg.effect<-list()
+    for(i in 1:length(horizon)){
+      ind<-adj.dates[adj.dates>=int.date] <= horizon[i]
+      mean[[i]]<-apply(marginal[ind,,],c(1,2),mean)
+      lbound[[i]]<-apply(marginal[ind,,],c(1,2), quantile, probs = 0.025)
+      ubound[[i]]<-apply(marginal[ind,,],c(1,2), quantile, probs = 0.975)
+      temp.avg.effect[[i]]<-cbind(mean  = apply(colMeans(marginal[ind,,]),1,mean),
+                                  lower = apply(colMeans(marginal[ind,,]),1,quantile, probs=0.025),
+                                  upper = apply(colMeans(marginal[ind,,]),1,quantile, probs=0.975))
+    }
+  } else {
+    mean<-apply(marginal,c(1,2),mean)
+    lbound<-apply(marginal,c(1,2), quantile, probs = 0.025)
+    ubound<-apply(marginal,c(1,2), quantile, probs = 0.975)
+    temp.avg.effect<-cbind(mean  = apply(colMeans(marginal),1,mean),
+                           lower = apply(colMeans(marginal),1,quantile, probs=0.025),
+                           upper = apply(colMeans(marginal),1,quantile, probs=0.975))
+  }
+
+  margin<-list(mean = mean, lbound = lbound, ubound=ubound, temp.avg.effect = temp.avg.effect)
+
+
+  if(length(horizon)>0){ mean<-list(); lbound<-list(); ubound<-list(); temp.avg.effect<-list()
+    for(i in 1:length(horizon)){
+    ind<-adj.dates[adj.dates>=int.date] <= horizon[i]
+    mean[[i]]<-apply(avg.marginal[ind,,],c(1,2),mean)
+    lbound[[i]]<-apply(avg.marginal[ind,,],c(1,2), quantile, probs = 0.025)
+    ubound[[i]]<-apply(avg.marginal[ind,,],c(1,2), quantile, probs = 0.975)
+    temp.avg.effect[[i]]<-cbind(mean  = apply(colMeans(avg.marginal[ind,,]),1,mean),
+                                lower = apply(colMeans(avg.marginal[ind,,]),1,quantile, probs=0.025),
+                                upper = apply(colMeans(avg.marginal[ind,,]),1,quantile, probs=0.975))
+    }
+  } else {
+    mean<-apply(avg.marginal,c(1,2),mean)
+    lbound<-apply(avg.marginal,c(1,2), quantile, probs = 0.025)
+    ubound<-apply(avg.marginal,c(1,2), quantile, probs = 0.975)
+    temp.avg.effect<-cbind(mean  = apply(colMeans(avg.marginal),1,mean),
+                           lower = apply(colMeans(avg.marginal),1,quantile, probs=0.025),
+                           upper = apply(colMeans(avg.marginal),1,quantile, probs=0.975))
+  }
+
+  avg.margin<-list(mean = mean, lbound = lbound, ubound=ubound, temp.avg.effect = temp.avg.effect)
+
+  # Joint causal effect
+  if(length(horizon)>0){ mean<-list(); lbound<-list(); ubound<-list(); temp.avg.effect<-list()
+    for(i in 1:length(horizon)){
+    ind<-adj.dates[adj.dates>=int.date] <= horizon[i]
+    mean[[i]]<-apply(jjoint[ind,,],c(1,2),mean)
+    lbound[[i]]<-apply(jjoint[ind,,],c(1,2), quantile, probs = 0.025)
+    ubound[[i]]<-apply(jjoint[ind,,],c(1,2), quantile, probs = 0.975)
+    temp.avg.effect[[i]]<-cbind(mean  = apply(colMeans(jjoint[ind,,]),1,mean),
+                                lower = apply(colMeans(jjoint[ind,,]),1,quantile, probs=0.025),
+                                upper = apply(colMeans(jjoint[ind,,]),1,quantile, probs=0.975))
+    }
+  } else {
+    mean<-apply(jjoint,c(1,2),mean)
+    lbound<-apply(jjoint,c(1,2), quantile, probs = 0.025)
+    ubound<-apply(jjoint,c(1,2), quantile, probs = 0.975)
+    temp.avg.effect<-cbind(mean  = apply(colMeans(jjoint),1,mean),
+                           lower = apply(colMeans(jjoint),1,quantile, probs=0.025),
+                           upper = apply(colMeans(jjoint),1,quantile, probs=0.975))
+  }
+
+  joint<-list(mean = mean, lbound = lbound, ubound=ubound, temp.avg.effect = temp.avg.effect)
+
+  # Conditional causal effect
+  if(length(horizon)>0){ mean<-list(); lbound<-list(); ubound<-list(); temp.avg.effect<-list()
+    for(i in 1:length(horizon)){
+    ind<-adj.dates[adj.dates>=int.date] <= horizon[i]
+    mean[[i]]<-apply(conditional[ind,,],c(1,2),mean)
+    lbound[[i]]<-apply(conditional[ind,,],c(1,2), quantile, probs = 0.025)
+    ubound[[i]]<-apply(conditional[ind,,],c(1,2), quantile, probs = 0.975)
+    temp.avg.effect[[i]]<-cbind( mean  = apply(colMeans(conditional[ind,,]),1,mean),
+                                 lower = apply(colMeans(conditional[ind,,]),1,quantile, probs=0.025),
+                                 upper = apply(colMeans(conditional[ind,,]),1,quantile, probs=0.975))
+    }
+  } else {
+    mean<-apply(conditional,c(1,2),mean)
+    lbound<-apply(conditional,c(1,2), quantile, probs = 0.025)
+    ubound<-apply(conditional,c(1,2), quantile, probs = 0.975)
+    temp.avg.effect<-cbind( mean  = apply(colMeans(conditional),1,mean),
+                            lower = apply(colMeans(conditional),1,quantile, probs=0.025),
+                            upper = apply(colMeans(conditional),1,quantile, probs=0.975))
+  }
+
+  cond<-list(mean = mean, lbound = lbound, ubound=ubound, temp.avg.effect = temp.avg.effect)
+
+  return(list(mcmc = mcmc, pred = pred, adj.series = y[hol.dummy(dates)==0,],
+              adj.dates = dates[hol.dummy(dates)==0], original.series = y,
+              original.dates = dates, margin = margin, avg.margin = avg.margin,
+              joint = joint, cond = cond))
+}
+
+######################################################################################
+## Plotting function
+######################################################################################
+
+coop_multi_plot<-function(name,p,n,int.date,type){
+
+  # Given the saved output name of a RDS file containing the estimates from
+  # 'coop_multi_effects', the function draws posterior predictive checks and
+  # plots the estimated causal effect for every estimand provided in 'type'
+
+  # Args:
+  #  name     : the root name of the saved output file in RDS format
+  #  p        : number of time series in the same multivariate vector
+  #  n        : number of pairs (or groups)
+  #  int.date : a 'Date' object, the date of the intervention
+  #  type     : a character vector, possible values in c("joint","conditional","marginal","avg.marginal")
+
+  ppchecks(name,p=p,n=n)
+
+  if("joint" %in% type){
+    joint_plot(name,p=p,n=n,int.date=int.date)
+  }
+  if("cond" %in% type){
+    cond_plot(name,p=p,n=n,int.date = int.date)
+  }
+  if("avg.marginal" %in% type){
+    avgmargin_plot(name,p=p,n=n)
+  }
+  if("marginal" %in% type){
+    margin_plot(name,p=p,n=n)
+  }
+}
+
+#------------------------------------------------------------------------------
+joint_plot<-function(name,p,n,int.date){
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_joint_pair_",coup,".jpeg",sep=""), width=900,height = 400)
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+    for(i in 1:p){
+      for(j in 1:length(list.effect$joint$mean)){
+        effect<-list.effect$joint
+        ylim<-c(min(effect$lbound[[j]][,i]), max(effect$ubound[[j]][,i]))
+        main<-expression(paste(tau," =", Y(1,0),"-",Y(0,0)))
+        dates<-list.effect$adj.dates
+        start<-which(dates==int.date)
+        end<-start + dim(effect$mean[[j]])[1]
+        x<-dates[start:(end-1)]
+        plot(y=effect$mean[[j]][,i], x=x,type="l",col="blue",ylim=ylim,
+             main=main,ylab="",xlab="", cex.main=2, cex.axis=2)
+        lines(y=effect$ubound[[j]][,i],x=x,lty=2)
+        lines(y=effect$lbound[[j]][,i],x=x,lty=2)
+      }
+    }
+    dev.off()
+  }
+
+  ## Observed vs forecast plot
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_joint_ovf_pair_",coup,".jpeg",sep=""), width=900,height = 400)
+
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+    for(i in 1:p){
+      for(j in 1:length(list.effect$joint$mean)){
+        dates<-list.effect$original.dates
+        start<-which(dates==int.date)-100
+        end<-dim(list.effect$pred[[1]]$post.pred)[1] # pred[[1]] is Y(0,0)
+        x<-dates[start:end]
+        y<-list.effect$original.series
+        y<-y[start:end,]
+        post.mean<-apply(list.effect$pred[[1]]$post.pred,c(1,2),mean)
+        post.mean<-post.mean[start:end,]
+        ylim<-c(min(min(y[,i]),min(post.mean[,i])), max(max(y[,i]),max(post.mean[,i])))
+        plot(y=y[,i],x=x,type="l",ylim=ylim,ylab="", cex.axis=2)
+        lines(post.mean[,i],col="blue",x=x)
+        abline(v=int.date,col="red")
+      }
+    }
+    dev.off()
+  }
+}
+
+#------------------------------------------------------------------------------------
+cond_plot<-function(name,p,n, int.date){
+
+  ### Causal effect plot
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_cond_pair_",coup,".jpeg",sep=""), width=900,height = 400)
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+
+    for(i in 1:p){
+      for(j in 1:length(list.effect$cond$mean)){
+        effect<-list.effect$cond
+        ylim<-c(min(effect$lbound[[j]][,i]), max(effect$ubound[[j]][,i]))
+        main<-expression(paste(tau," =", Y(1,1),"-",Y(0,1)))
+        dates<-list.effect$adj.dates
+        start<-which(dates==int.date)
+        end<-start + dim(effect$mean[[j]])[1]
+        x<-dates[start:(end-1)]
+        plot(y=effect$mean[[j]][,i], x=x,type="l",col="blue",ylim=ylim,
+             main=main,ylab="",xlab="", cex.main=2, cex.axis=2)
+        lines(y=effect$ubound[[j]][,i],x=x,lty=2)
+        lines(y=effect$lbound[[j]][,i],x=x,lty=2)
+      }
+    }
+    dev.off()
+  }
+
+  ## Observed vs forecast plot
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_cond_ovf_pair_",coup,".jpeg",sep=""), width=900,height = 400)
+
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+    for(i in 1:p){
+      for(j in 1:3){
+        dates<-list.effect$original.dates
+        start<-which(dates==int.date)-100
+        end<-dim(list.effect$pred[[3]]$post.pred)[1] # pred[[3]] is Y(0,1)
+        x<-dates[start:end]
+        post.mean.11<-apply(list.effect$pred[[2]]$post.pred,c(1,2),mean) # pred[[2]] is Y(1,1)
+        post.mean.11<-post.mean.11[start:end,]
+        post.mean.01<-apply(list.effect$pred[[3]]$post.pred,c(1,2),mean)
+        post.mean.01<-post.mean.01[start:end,]
+        ylim<-c(min(min(post.mean.11[,i]),min(post.mean.01[,i])), max(max(post.mean.11[,i]),max(post.mean.01[,i])))
+        plot(y=post.mean.11[,i],x=x,type="l",ylim=ylim,ylab="", cex.axis=2)
+        lines(post.mean.01[,i],col="blue",x=x)
+        abline(v=int.date,col="red")
+      }
+    }
+    dev.off()
+  }
+}
+
+#----------------------------------------------------------------------------------
+avgmargin_plot<-function(name,p,n){
+
+  ### Causal effect plot
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_avgmargin_pair_",coup,".jpeg",sep=""), width=1200,height = 300)
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+
+    for(i in 1:p){
+      for(j in 1:3){
+        effect<-list.effect$avg.margin
+        ylim<-c(min(exp(effect$lbound[[j]][,i])), max(exp(effect$ubound[[j]][,i])))
+        main<-expression(paste(tau,"=",sqrt(tau[1]%.%tau[2])))
+        dates<-list.effect$adj.dates
+        start<-which(dates==int.date)
+        end<-start + dim(effect$mean[[j]])[1]
+        x<-dates[start:(end-1)]
+        plot(y=exp(effect$mean[[j]][,i]), x=x,type="l",col="blue",ylim=ylim,
+             main=main,ylab="",xlab="", cex.main=2, cex.axis=2)
+        lines(y=exp(effect$ubound[[j]][,i]),x=x,lty=2)
+        lines(y=exp(effect$lbound[[j]][,i]),x=x,lty=2)
+      }
+    }
+    dev.off()
+  }
+}
+
+#------------------------------------------------------------------------------------
+margin_plot<-function(name,p,n){
+
+  ### Causal effect plot
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_margin_pair_",coup,".jpeg",sep=""), width=1200,height = 300)
+    par(mar=c(5,4,4,2))
+    par(mfrow=c(2,3))
+
+    for(i in 1:p){
+      for(j in 1:3){
+        effect<-list.effect$margin
+        ylim<-c(min(exp(effect$lbound[[j]][,i])), max(exp(effect$ubound[[j]][,i])))
+        main<-expression(paste(tau,"=",sqrt(tau[1]%.%tau[2])))
+        dates<-list.effect$adj.dates
+        start<-which(dates==int.date)
+        end<-start + dim(effect$mean[[j]])[1]
+        x<-dates[start:(end-1)]
+        plot(y=effect$mean[[j]][,i], x=x,type="l",col="blue",ylim=ylim,
+             main=main,ylab="",xlab="", cex.main=2, cex.axis=2)
+        lines(y=effect$ubound[[j]][,i],x=x,lty=2)
+        lines(y=effect$lbound[[j]][,i],x=x,lty=2)
+      }
+    }
+    dev.off()
+  }
+}
+
+#------------------------------------------------------------------------------------
+ppchecks<-function(name,p,n){
+
+  for(coup in 1:n){
+    list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+    jpeg(file=paste(name,"_ppc_pair_",coup,".jpeg",sep=""), width=1200,height = 300)
+    par(mar=c(5,4,3,3))
+    par(mfrow=c(2,4))
+    dates<-list.effect$original.dates
+    ind<-dates<int.date
+    y<-list.effect$original.series
+    post.pred<-list.effect$pred[[1]]$post.pred.0
+    mcmc<-list.effect$mcmc[[1]]
+    post.pred.mean<-apply(post.pred,c(1,2),mean)
+
+    ## Density of posterior mean vs density of the data before intervention
+    for(i in 1:p){
+      plot(density(y[ind,i]), xlab="",ylab="",main="", cex.axis=2)
+      lines(density(post.pred.mean[,i]),col="blue",xlab="",ylab="")
+
+    ## Histograms & Bayesian p-value
+      max.distrib<-apply(post.pred,c(2,3),max)
+      pvalue<-sum(max.distrib[i,] >= max(y[ind,i]))/ncol(max.distrib)
+      hist(max.distrib[i,], 30, col="lightblue",border="grey", cex.axis=2, main = paste("p.value =",round(pvalue,2)))
+      abline(v=max(y[ind,i]), col="darkblue",lwd=3)
+      #legend("topleft",legend=paste("p-value = ",round(pvalue,2)), box.col = "white", cex=2)
+
+    ## Residual plots
+      y.rep<-matrix(y[ind,i], nrow(y[ind,]), (mcmc$niter-mcmc$burn), byrow = F)
+      res<-(y.rep - (post.pred[,i,]-mcmc$eps.samples[,i,]))
+      std.res<-t(apply(res,i,FUN="/",sqrt(mcmc$Sigma.eps[i,i,])))
+      qqnorm(rowMeans(std.res),main="", cex.axis=2, cex.lab=2)
+      qqline(rowMeans(std.res))
+      Acf(rowMeans(std.res),main="",cex.axis=2, cex.lab=2)
+
+    }
+    dev.off()
+
+    ## Regressor index plot
+    jpeg(file=paste(name,"_inclusionprob_",coup,".jpeg",sep=""))
+    par(mar=c(9,5,1,2))
+    par(mfrow=c(1,1))
+    X<-mcmc$X
+    select<- apply(mcmc$Z.beta, 2, mean)>0.5 # selecting regressors with prob of inclusion bigger than some amount
+    plot(apply(mcmc$Z.beta,2,mean)[select], type="h", lwd=2,
+          ylab=expression(paste("Pr(",italic(z[j] == 1),"|",italic(y),",X)",sep="")),
+          las=2, xaxt="none", xlab="", cex.lab=2)
+    axis(1, seq(1,ncol(X[,select]),1),las=2, labels = gsub(colnames(X)[select],pattern = "pezzi.", replacement = ""), cex.axis=2)
+    dev.off()
+  }
+}
+
+
+#####################################################################################
+## Table function
+######################################################################################
+
+coop_table<-function(name,type,n){
+  causal.table.joint<-matrix(NA, nrow=2*n, ncol = 9)
+  causal.table.cond<- matrix(NA, nrow=2*n, ncol = 9)
+  causal.table.marg<- matrix(NA, nrow=n, ncol = 9)
+  causal.table.avgmarg<- matrix(NA, nrow=n, ncol = 9)
+  even<-seq(1,20,by=1)[seq(1,20,by=1)%%2==0]
+  odd<-seq(1,20,by=1)[!seq(1,20,by=1)%%2==0]
+
+  if("joint" %in% type){
+    for(i in 1:n){
+      list.effect<-readRDS(file = paste(name,"-",i,".rds",sep=""))
+      causal.table.joint[odd[i]:even[i],1:3]<-list.effect$joint$temp.avg.effect[[1]]
+      causal.table.joint[odd[i]:even[i],4:6]<-list.effect$joint$temp.avg.effect[[2]]
+      causal.table.joint[odd[i]:even[i],7:9]<-list.effect$joint$temp.avg.effect[[3]]
+    }
+    write.table(causal.table.joint, file = paste(name,"-joint_effect.txt", sep=""))
+  }
+
+  if("conditional" %in% type){
+    for(i in 1:n){
+      list.effect<-readRDS(file = paste(name,"-",i,".rds",sep=""))
+      causal.table.cond[odd[i]:even[i],1:3]<-list.effect$cond$temp.avg.effect[[1]]
+      causal.table.cond[odd[i]:even[i],4:6]<-list.effect$cond$temp.avg.effect[[2]]
+      causal.table.cond[odd[i]:even[i],7:9]<-list.effect$cond$temp.avg.effect[[3]]
+    }
+    write.table(causal.table.cond, file = paste(name,"-cond_effect.txt", sep=""))
+  }
+
+  if("marginal" %in% type){
+    for(i in 1:n){
+      list.effect<-readRDS(file = paste(name,"-",i,".rds",sep=""))
+      causal.table.marg[i,1:3]<-list.effect$margin$temp.avg.effect[[1]][1,]
+      causal.table.marg[i,4:6]<-list.effect$margin$temp.avg.effect[[2]][1,]
+      causal.table.marg[i,7:9]<-list.effect$margin$temp.avg.effect[[3]][1,]
+    }
+    write.table(causal.table.marg, file = paste(name,"-marg_effect.txt", sep=""))
+  }
+
+  if("avg.marginal" %in% type){
+    for(i in 1:n){
+      list.effect<-readRDS(file = paste(name,"-",i,".rds",sep=""))
+      causal.table.avgmarg[i,1:3]<-list.effect$avg.margin$temp.avg.effect[[1]][1,]
+      causal.table.avgmarg[i,4:6]<-list.effect$avg.margin$temp.avg.effect[[2]][1,]
+      causal.table.avgmarg[i,7:9]<-list.effect$avg.margin$temp.avg.effect[[3]][1,]
+    }
+    write.table(causal.table.avgmarg, file = paste(name,"-avgmarg_effect.txt", sep=""))
+  }
+}
+
+#### ----------- END: NOT RUN -------------------------------------------------------
+
+## Old plotting function:
+
+# coop_multi_plot<-function(name){ #MODIFY THIS FUNCTION
+#
+#   # given the estimated models saved in RDS format, the function draws:
+#   # i) causal effect plots; ii) observed vs forecast plots;
+#   # iii) posterior predictive checks; iv) inclusion probabilities. The name of
+#   # the output file from 'coop_multi_effects' must be written in the following form:
+#   # 'name-number.rds' where 'number' is the number of the pair
+#
+#   # Args
+#   #  name: character, root name of the saved output file
+#
+#   p<-dim(h.couples)[2]
+#
+#   for(i in 1:p){
+#     for(coup in 1:10){
+#       list.effect<-readRDS(file = paste(name,"-",coup,".rds",sep=""))
+#
+#       ### Causal effect plot (per joint e conditional)
+#       jpeg(file=paste(name,"_joint_y",i,"_couple_",coup,".jpeg",sep=""), width=1200,height = 300)
+#       par(mar=c(5,4,4,2))
+#       par(mfrow=c(1,3))
+#
+#       for(j in 1:3){
+#         ylim<-c(min(effect[[j]]$lower.joint[,i]), max(effect[[j]]$upper.joint[,i]))
+#         main<-expression(paste(ln(tau)," = Y(0,1)-Y(0,0)"))
+#         dates<-effect[[j]]$adj.dates
+#         start<-which(dates==int.date)
+#         end<-start + dim(effect[[j]]$mean.joint)[1]
+#         x<-dates[start:(end-1)]
+#         plot(y=effect[[j]]$mean.joint[,i], x=x,type="l",col="blue",ylim=ylim,
+#              main=main,ylab="",xlab="", cex.main=2, cex.axis=2)
+#         lines(y=effect[[j]]$upper.joint[,i],x=x,lty=2)
+#         lines(y=effect[[j]]$lower.joint[,i],x=x,lty=2)
+#
+#       }
+#       dev.off()
+#
+#       ### Plot Observed vs Forecast
+#       jpeg(file=paste(name,"_obsvsforecast_y",i,"_couple_",coup,".jpeg",sep=""), width=1200,height = 300)
+#       par(mar=c(5,4,4,2))
+#       par(mfrow=c(1,3))
+#
+#       for(j in 1:3){
+#         dates<-effect[[j]]$original.dates
+#         start<-which(dates==int.date)-100
+#         end<-dim(effect[[j]]$predict$post.pred)[1]
+#         x<-dates[start:end]
+#         y<-effect[[j]]$original.series
+#         y<-y[start:end,]
+#         post.mean<-apply(effect[[j]]$predict$post.pred,c(1,2),mean)
+#         post.mean<-post.mean[start:end,]
+#         ylim<-c(min(min(y[,i]),min(post.mean[,i])), max(max(y[,i]),max(post.mean[,i])))
+#         plot(y=y[,i],x=x,type="l",ylim=ylim,ylab="", cex.axis=2)
+#         lines(post.mean[,i],col="blue",x=x)
+#         abline(v=int.date,col="red")
+#       }
+#       dev.off()
+#
+#       ### Posterior predictive checks
+#       jpeg(file=paste(name,"_postpredchecks_y",i,"_couple_",coup,".jpeg",sep=""), width=1200,height = 300)
+#       par(mar=c(5,4,4,2))
+#       par(mfrow=c(1,4))
+#       dates<-effect[[3]]$original.dates
+#       ind<-dates<int.date
+#       y<-effect[[3]]$original.series
+#       post.pred<-effect[[3]]$predict$post.pred.0
+#       post.pred.mean<-apply(post.pred,c(1,2),mean)
+#
+#       # Density of posterior mean vs density of the data before intervention
+#       plot(density(y[ind,i]), xlab="",ylab="",main="", cex.axis=2)
+#       lines(density(post.pred.mean[,i]),col="blue")
+#
+#       # Histograms & Bayesian p-value
+#       max.distrib<-apply(post.pred,c(2,3),max)
+#       pvalue<-sum(max.distrib[i,] >= max(y[ind,i]))/ncol(max.distrib)
+#       hist(max.distrib[i,], 30, main="", col="lightblue",border="grey", cex.axis=2)
+#       abline(v=max(y[ind,i]), col="darkblue",lwd=3)
+#       legend("topleft",legend=paste("p-value = ",round(pvalue,2)), box.col = "white", cex=2)
+#
+#       # Residual plots
+#       std.res<-rowMeans(effect[[3]]$mcmc$eps.samples[,i,])/mean(sqrt(effect[[1]]$mcmc$Sigma.eps[i,i,]))
+#       qqnorm(std.res,main="", cex.axis=2, cex.lab=2)
+#       qqline(std.res)
+#       Acf(std.res,main="",cex.axis=2, cex.lab=2)
+#       dev.off()
+#
+#       # Regressor index plot
+#       if(i == 1){
+#         jpeg(file=paste(name,"_inclusionprob_",coup,".jpeg",sep=""))
+#         par(mar=c(8,5,2,2))
+#         X<-effect[[1]]$mcmc$X
+#         select<- apply(effect[[1]]$mcmc$Z.beta, 2, mean)>0.5 # selecting regressors with prob of inclusion bigger than some amount
+#         plot(apply(effect[[1]]$mcmc$Z.beta,2,mean)[select], type="h", lwd=2,
+#              ylab=expression(paste("Pr(",italic(z[j] == 1),"|",italic(y),",X)",sep="")),
+#              las=2, xaxt="none", xlab="", cex.lab=2)
+#         axis(1, seq(1,ncol(X[,select]),1),las=2, labels = gsub(colnames(X)[select],pattern = "pezzi.", replacement = ""), cex.axis=2)
+#         dev.off()
+#       }
+#     }
+#   }
+# }

@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1593437361382.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2515380975",
+    "id" : "5DF0F9D6",
+    "lastKnownWriteTime" : 1593535192,
+    "last_content_update" : 1593535192930,
+    "path" : "~/GitHub/CausalMBSTS/R/plot_mbsts.R",
+    "project_path" : "R/plot_mbsts.R",
+    "properties" : {
+        "cursorPosition" : "8,3",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 10,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

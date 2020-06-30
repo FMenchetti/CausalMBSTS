@@ -1,0 +1,509 @@
+######################################################################################
+######################################################################################
+####  Author:           Fiammetta Menchetti                                       ####
+####                                                                              ####
+####  Date last update: 2020-05-21                                                ####
+####                                                                              ####
+####  Content:          Multivariate Bayesian Structural Time Serie Models        ####
+####                                                                              ####
+####                                                                              ####
+######################################################################################
+######################################################################################
+
+rm(list=ls())
+setwd("C:/Users/fiamm/Google Drive/MBSTS/R")
+set.seed(5290)
+Sys.getlocale()
+Sys.setlocale("LC_ALL","English")
+
+######################################################################################
+### Loading required libraries
+######################################################################################
+
+library(timeDate)       # needed to define holidays
+library(MarketMatching)
+library(CholWishart)    # needed to sim from the IW
+library(KFAS)
+library(Matrix)         # needed for the function 'bdiag'
+library(MixMatrix)      # needed to sim from the matrix-normal distrib
+library(MASS)           # needed to sim from the multivariate Normal
+library(forecast)       # needed to plot Acf and Pacf functions
+
+######################################################################################
+#  Functions
+######################################################################################
+
+source('C:/Users/fiamm/Documents/Dottorato/Tesi/mixed-functions.R')
+source('C:/Users/fiamm/Google Drive/MBSTS/R/causal_mbsts.R')
+source('C:/Users/fiamm/Google Drive/MBSTS/R/predict_mbsts.R')
+source('C:/Users/fiamm/Google Drive/MBSTS/R/mbsts_mcmc.R')
+source('C:/Users/fiamm/Google Drive/MBSTS/R/coop_multi_effects.R')
+
+######################################################################################
+#  Intervention date
+######################################################################################
+
+int.date<-as.Date("2018-10-04", format="%Y-%m-%d")
+
+######################################################################################
+#  Importing data, checks, average sales in an hour
+######################################################################################
+
+### Get data
+TP<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/TP.csv", header=T, sep=" ")
+TP.mod.price<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/TP.modprice.csv", header=T, sep=" ")
+TP.price<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/TP.price.csv", header=T, sep=" ")
+SP<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/SP.csv", header=T, sep=" ")
+SP.price<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/SP.price.csv", header = T, sep=" ")
+SP.mod.price<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/SP.mod.price.csv",header=T,sep=" ")
+wines<-read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/wines.csv", header=T, sep=" ")
+dates<-as.Date(read.table("C:/Users/fiamm/Documents/Dottorato/Tesi/CoopMulti/tidy.cookies.csv", header=T, sep=" ")[,1], "%Y-%m-%d")
+
+### Define SP price under treatment
+int<-which(dates == int.date)
+SP.price.treat<-SP.price
+par(mfrow=c(4,3))
+for(i in 1:ncol(SP.price)){ k<-TP.price[int,i]/TP.price[(int-1),i] ; print(k)
+  SP.price.treat[(int:nrow(SP.price)),i]<-SP.price[(int-1),i]*k
+}
+
+### Taking care of Sundays:
+# On Sundays the supermarket chain stays open only in the morning, except in December
+# and the last Sunday in November, when the stores stay open all the day. 
+# We take care of that by working with average sales in an hour
+
+# Working with average sales per hour
+ind<-weekdays(dates)=="Sunday" & format(dates,"%m")!="12" & !(dates %in% c(as.Date("2017-11-26"),as.Date("2018-11-25"))) 
+h.TP<-TP ; h.SP<-SP ; h.wines<-wines
+h.TP[ind,]<-TP[ind,]/5 ; h.SP[ind,]<-SP[ind,]/5 ; 
+h.wines[ind,]<-wines[ind,]/5
+
+h.TP[!ind,]<- TP[!ind,]/13 ; h.SP[!ind,]<-SP[!ind,]/13 ; 
+h.wines[!ind,]<-wines[!ind,]/13
+
+### Checking for negative or zero sales before taking the log
+sales<-list(h.TP, h.SP, h.wines)
+
+for(i in 1:length(sales)){
+  if(sum(sales[[i]] <0)>0){
+    print("In series ",i," N. of negative sales is ", paste(sum(sales[[i]] <0)))
+    
+  }
+  if(sum(sales[[i]] == 0)>0){
+    print(paste("In series ",i, " N. of '0' sales is ", sum(sales[[i]] ==0)))
+    for(j in 1:ncol(sales[[i]])){
+     ind<-which(sales[[i]][,j]==0)
+      sales[[i]][ind,j]<-1
+    }
+  }
+}
+
+
+h.wines<-sales[[3]]
+
+
+### dummies
+sat<-day.dummy(dates)[,2]
+sun<-day.dummy(dates)[,3]
+hol<-hol.dummy(dates, add=F, lags = c(1,1))
+
+# 'hol.dummy' creates a dummy for Italian holidays
+# I include manually San Giovanni holiday (all shops in Florence are closed on that day)
+ind<-which(dates == "2018-06-24")
+hol[ind-1]<-1 ; hol[ind+1]<-1
+
+######################################################################################
+#  Joint & Conditional Causal effect estimation
+######################################################################################
+
+# Change inputs here --------------------------------------------------------------
+
+# Defining "couples" 
+h.couples<-array(NA, dim = c(nrow(TP), 2, 10))
+for(i in 1:10){
+  h.couples[,,i]<-cbind(TP[,i],SP[,i]) # change with TP and SP for daily sales
+}
+
+# names of saved output file
+name<-"daily_trendseas"
+
+#-----------------------------------------------------------------------------------
+
+### Loop
+for(coup in 1:dim(h.couples)[3]){ print(coup)
+  
+  y<-h.couples[,,coup]
+  X<-wines
+  
+  ## Pre-screening of control variables
+  # reshaping
+  data<-data.frame(y1=y[,1], y2=y[,2], X)
+  input<-reshape(data, varying = seq(1:ncol(data)), v.names = "sales",times=colnames(data),
+                 direction = "long")
+  input$id<-as.Date(input$id, origin = "2017-08-31")
+  
+  # matching
+  best.match<-best_matches(data=input, markets_to_be_matched = c("y1","y2"), id_variable = "time",
+                           date_variable = "id", matching_variable = "sales", 
+                           start_match_period = "2017-09-01", end_match_period = "2018-10-03",
+                           matches = 10)
+  controls<-unique(best.match$BestMatches$BestControl)
+  
+  # best_matches find y2 as best control for y1 and y1 as best control for y2
+  # so we should take them away from the set of common controls
+  controls<-controls[ ! controls %in% c("y1", "y2")]
+  
+  X.l<-list()
+  # X.l[[1]]<-as.matrix(cbind(sat,sun,hol,price.treat= log(TP.mod.price[,coup]), 
+  #                           price.subs= log(SP.mod.price[,coup]), X[,controls])) # Y(0,0)
+  # X.l[[2]]<-as.matrix(cbind(sat,sun,hol,price.treat= log(TP.price[,coup]), 
+  #                           price.subs= log(SP.price.treat[,coup]))) # Y(1,1)
+  # X.l[[3]]<-as.matrix(cbind(sat,sun,hol,price.treat= log(TP.mod.price[,coup]), 
+  #                           price.subs= log(SP.price.treat[,coup]), X[,controls])) #Y(0,1)
+  
+  X.l[[1]]<-as.matrix(cbind(sat,sun,hol,price.treat= TP.mod.price[,coup],
+                            price.subs= SP.mod.price[,coup], X[,controls])) # Y(0,0)
+  X.l[[2]]<-as.matrix(cbind(sat,sun,hol,price.treat= TP.price[,coup],
+                            price.subs= SP.price.treat[,coup])) # Y(1,1)
+  X.l[[3]]<-as.matrix(cbind(sat,sun,hol,price.treat= TP.mod.price[,coup],
+                            price.subs= SP.price.treat[,coup], X[,controls])) #Y(0,1)
+  
+  ## Model estimation pre-period
+  # priors
+  v1<-var(y[dates<int.date,1]) # objective Bayes
+  v2<-var(y[dates<int.date,2]) # objective Bayes
+  rho<--0.8
+  cov<-sqrt(v1)*sqrt(v2)*rho
+  s0.eps <- matrix(c(v1,cov,cov,v2),nrow=2)
+  s0.k <- matrix(c(v1,cov,cov,v2),nrow=2)
+  Sigma.k <- rInvWishart(1, nu0.k, s0.k)[,,1]
+  Sigma.eps <- rInvWishart(1, nu0.eps, s0.eps)[,,1]
+  
+  # model
+  model<- SSModel( y~ SSMtrend(degree=1, Q= Sigma.k) +
+                      SSMseasonal(period = 7, sea.type = "dummy", Q=Sigma.k), 
+                    H = Sigma.eps) 
+  
+  ## Causal impact (estimation at three different time horizons)
+  horizon<-c(as.Date("2018-11-04"),as.Date("2019-01-04"),as.Date("2019-04-30"))
+  effect<-coop_multi_effects(Smodel=model, X= X.l, y = y , dates = dates,horizon = horizon, 
+                                                              int.date = int.date, H = NULL, nu0.k = NULL, s0.k=s0.k, 
+                                                              nu0.eps = NULL, s0.eps=s0.eps, niter=1200, burn=200)
+  
+  ## Saving estimates
+  saveRDS(effect, file = paste(name,"-",coup,".rds", sep=""))
+  
+}
+
+######################################################################################
+#  Tables and plots
+######################################################################################
+
+### Table with all estimates
+#coop_table(name=name,n=10, type = c("joint"))
+
+### Plots
+ppchecks(name=name, p=2,n=10)
+# coop_multi_plot(name=name,p=2,n=10,type="joint", int.date = int.date)
+
+######################################################################################
+#  Simulation study
+######################################################################################
+
+
+#-------- END -----------------------------------------------------------------------
+
+#### ADDITIONAL CODES ####
+
+### BMA
+#bma<-apply(effect[[1]]$mcmc$beta[,1,],1,mean)
+#lower<-apply(effect[[1]]$mcmc$beta[,2,], 1,quantile, probs=0.025)
+#upper<-apply(effect[[1]]$mcmc$beta[,2,], 1, quantile, probs=0.975)
+
+## 1) CHECK SALES DISTRIBUTION ON SUNDAYS
+# ind<-dates<int.date
+# par(mar=c(2,2,2,2))
+# par(mfrow=c(4,3))
+# d<-list()
+# for(i in 1:ncol(TP)){
+# plot(density(TP[ind,i]))
+# h[[i]]<-dates[TP[ind,i]>=quantile(TP[,i],probs = 0.95)]
+# l[[i]]<-dates[TP[ind,i]<=quantile(TP[,i],probs = 0.05)]
+# }
+# high.sales<-weekdays(as.Date(unlist(h),origin="1970-01-01"))
+# high.sales[high.sales=="Monday"]<-1 ; high.sales[high.sales=="Tuesday"]<-2
+# high.sales[high.sales=="Wednesday"]<-3 ; high.sales[high.sales=="Thursday"]<-4
+# high.sales[high.sales=="Friday"]<-5 ; high.sales[high.sales=="Saturday"]<-6
+# high.sales[high.sales=="Sunday"]<-7
+# 
+# 
+# low.sales<-weekdays(as.Date(unlist(l),origin="1970-01-01"))
+# low.sales[low.sales=="Monday"]<-1 ; low.sales[low.sales=="Tuesday"]<-2
+# low.sales[low.sales=="Wednesday"]<-3 ; low.sales[low.sales=="Thursday"]<-4
+# low.sales[low.sales=="Friday"]<-5 ; low.sales[low.sales=="Saturday"]<-6
+# low.sales[low.sales=="Sunday"]<-7
+# 
+# par(mfrow=c(1,2))
+# hist(as.numeric(high.sales),main="95% quantile of sales")
+# hist(as.numeric(low.sales),main="5% quantile of sales")
+
+# All the densities present a bump when sales are low,
+# and the 5% quantile of TPs' sales is on Sundays
+
+#d<-list()
+#sun.sales<-data.frame(date=dates[weekdays(dates)=="Sunday"],TP.sun = TP[weekdays(dates)=="Sunday",])
+#for(i in 1:ncol(TP)){
+#plot(density(sun.sales[,i+1]))
+#d[[i]]<-sun.sales$date[sun.sales[,i+1]>=quantile(sun.sales[,i+1],probs = 0.95)]
+#}
+#par(mfrow=c(1,1))
+#hist(as.Date(unlist(d),origin="1970-01-01"),breaks = "days")
+
+# Density of Sunday sales presents a bump too, this time the bump
+# corrensponds to high sales (mainly located in December)
+
+## 2) CHECK SALES DISTRIBUTION ON SUNDAYS AFTER TRANSFORMATION (I.E. AVERAGE SALES IN AN HOUR)
+
+# ind<-dates<int.date
+# par(mar=c(2,2,2,2))
+# par(mfrow=c(4,3))
+# h<-list()
+# l<-list()
+# for(i in 1:ncol(h.TP)){
+# plot(density(h.TP[ind,i]),main=paste("item",i))
+# h[[i]]<-dates[h.TP[ind,i]>=quantile(h.TP[,i],probs = 0.95)]
+# l[[i]]<-dates[h.TP[ind,i]<=quantile(h.TP[,i],probs = 0.05)]
+# }
+# 
+# high.sales<-weekdays(as.Date(unlist(h),origin="1970-01-01"))
+# high.sales[high.sales=="Monday"]<-1 ; high.sales[high.sales=="Tuesday"]<-2
+# high.sales[high.sales=="Wednesday"]<-3 ; high.sales[high.sales=="Thursday"]<-4
+# high.sales[high.sales=="Friday"]<-5 ; high.sales[high.sales=="Saturday"]<-6
+# high.sales[high.sales=="Sunday"]<-7
+# 
+# 
+# low.sales<-weekdays(as.Date(unlist(l),origin="1970-01-01"))
+# low.sales[low.sales=="Monday"]<-1 ; low.sales[low.sales=="Tuesday"]<-2
+# low.sales[low.sales=="Wednesday"]<-3 ; low.sales[low.sales=="Thursday"]<-4
+# low.sales[low.sales=="Friday"]<-5 ; low.sales[low.sales=="Saturday"]<-6
+# low.sales[low.sales=="Sunday"]<-7
+# 
+# par(mfrow=c(1,2))
+# hist(as.numeric(high.sales),main="95% quantile of sales")
+# hist(as.numeric(low.sales),main="5% quantile of sales")
+# 
+# d<-list()
+# sun.sales<-data.frame(date=dates[weekdays(dates)=="Sunday"],TP.sun = h.TP[weekdays(dates)=="Sunday",])
+# for(i in 1:ncol(h.TP)){
+# plot(density(sun.sales[,i+1]))
+# d[[i]]<-sun.sales$date[sun.sales[,i+1]>=quantile(sun.sales[,i+1],probs = 0.95)]
+# }
+# par(mfrow=c(1,1))
+# hist(as.Date(unlist(d),origin="1970-01-01"),breaks = "days")
+
+## OUTLIERS CHECK
+# dates.before<-dates[ind]
+# d<-list()
+# for(i in 1:10){
+#   item<-readRDS(paste("prova-",i,".rds",sep=""))
+#   std.res.abs<-abs(rowMeans(item$mcmc[[1]]$eps.samples[,1,])/mean(sqrt(item$mcmc[[1]]$Sigma.eps[1,1,])))
+#   select<-std.res.abs>=quantile(std.res.abs,probs = 0.95)
+#   d[[i]]<-dates.before[select]
+# }
+# par(mfrow=c(1,1))
+# hist(as.Date(unlist(d),origin="1970-01-01"),breaks = "days", main = "outliers dates")
+# out.day<-weekdays(as.Date(unlist(d),origin="1970-01-01"))
+# out.day[out.day == "Monday"]<-1 ; out.day[out.day == "Tuesday"]<-2 
+# out.day[out.day == "Wednesday"]<-3 ; out.day[out.day == "Thursday"]<-4
+# out.day[out.day == "Friday"]<-5 ; out.day[out.day == "Saturday"]<-6
+# out.day[out.day == "Sunday"]<-7
+# hist(as.numeric(out.day),main = "outliers day")
+# 
+# par(mfrow=c(5,4))
+# for(i in 1:10){
+#   item<-readRDS(paste("prova-",i,".rds",sep=""))
+#   obs<-item$original.series[ind,1]
+#   y.obs<-matrix(obs, length(obs), 1000, byrow = F)
+#   prova<-(y.obs - (item$pred[[1]]$post.pred.0[,1,]-item$mcmc[[1]]$eps.samples[,1,]))
+#   prova<-t(apply(prova,1,FUN="/",sqrt(item$mcmc[[1]]$Sigma.eps[1,1,])))
+#   qqnorm(rowMeans(prova))
+#   qqline(rowMeans(prova))
+#   Acf(rowMeans(prova))
+# }
+
+# for i = 10
+#plot(rowMeans(prova),type="l",col="red")
+#lines(rowMeans(eps.samples[,1,]))
+#No more bumps in h.TP sales, the highest sales on Sundays are no more located
+#in December
+
+## 3) MBSTS (Jinwen Qiu Package )
+
+# Candidate regressors
+# X.star<-as.matrix(cbind(h.wines[,1:5],h.wines[,1:5])) 
+# ki<-c(dim(X.star)[2]/2, dim(X.star)[2])
+# 
+# # Selecting pre-period
+# ind<-dates < int.date
+# X.pre<-X.star[ind,]
+# y.pre<-y[ind,]
+# 
+# # Selecting post-period
+# X.post<-X.star[!ind,]
+# y.post<-y[!ind,]
+#   
+# # Setting hyperparameters
+# pi <-matrix(rep(0.5, dim(X.star)[2]), nrow= dim(X.star)[2])   # inclusion probability of each regressor
+# b<-matrix(rep(0, dim(X.star)[2]), nrow=dim(X.star)[2])        # prior mean of regressors' coefficients
+# kapp<-1                                                       # n. of obs worth of weight (if 1 we get the MLE variance)
+# R2<- 0.6                                                      # expected R^2 from the regression
+# v0<-4                                                         # min integer value such that the mean of the IW exists
+# v<- 0.01                                                      # prior sample size
+# ss<- 0.01                                                     # prior sum of squares
+# 
+# # Estimation
+# model<-tsc.setting(Y=y.pre, mu=c(1,1), rho=c(0,0), S=c(7,7))
+# fit<-myownts(Y=y.pre, X.star = X.pre, STmodel = model, ki = ki, 
+#            pii = pi, b = b, kapp = kapp, R2 = R2, v0 = v0, v=v, ss = ss, mc=1100, burn=100)
+# 
+# # Prediction
+# forecast<-mbsts.forecast(fit, model, newdata = X.post, nrow(X.post))
+
+## 4) MBSTS (Steve Scott, bsts Package)
+ 
+# # Selecting pre-period
+# ind<-dates < int.date
+# X<-as.matrix(cbind(h.ready,h.wines))
+# X<-apply(X,2,log)
+# X.pre<-X[ind,]
+# y.pre<-y[ind,]
+# 
+# # Selecting post-period
+# X.post<-X[!ind,]
+# 
+# # Defining shared local level and other independent states for each series
+# ss<-AddSharedLocalLevel(list(), y.pre, nfactors = 2)
+# s1<-AddSeasonal(list(), y.pre[,1], nseasons = 7, season.duration = 1)
+# s2<-AddSeasonal(list(), y.pre[,2], nseasons = 7, season.duration = 1)
+# 
+# # Running the model
+# bsts.model <- myfunc(y.pre~ X.pre, shared.state.specification = ss, 
+#                     series.state.specification=list(s1,s2), niter = 100,
+#                     data.format = "wide")
+# 
+# # Forecasting (THE FOLLOWING DOESN'T WORK)
+# prova<-predict.mbsts(bsts.model, horizon = 209, newdata = X.post)
+
+
+## 5) Causal effect skipping the days with temporary promotions
+
+
+###  Changing i in 1:10 see where promotions are
+# ind1<-which(diff(log(SP.price[dates>=int.date-1,i]))< -0.10) 
+# ind2<-which(diff(log(SP.price[dates>=int.date-1,i])) >0.10)
+
+### Results:
+#1:  1:15          - 70:86   - 141-155   -195 in poi
+#2:  1:15          - 70:86   - 141-155   -195 in poi
+#3:  1:15          - 70:86   - 141-155   -195 in poi
+#4:  1:15          - 70:86   - 97-113    -141-155 
+#5:  1:15 ; 28:32  - 33:43
+#6:  1:15                    - 141:155
+#7:  14:30         - 75:85
+#8:  1:15 ; 28:32  - 33:43   - 141:155
+#9:  1:15                    - 141:155
+#10: 28:32;        - 33:43   - 97:113    - 141-155 
+
+### Empty object to store causal results
+# causal1<-matrix(NA, nrow = ncol(SP), ncol = 3)
+# causal2<-matrix(NA, nrow = ncol(SP), ncol = 3)
+# causal3<-matrix(NA, nrow = ncol(SP), ncol = 3)
+
+### FIRST TIME HORIZON
+# horizon<-c(as.Date("2018-11-04"),as.Date("2019-01-04"),as.Date("2019-04-30"))
+# ind<-dates>=int.date & dates<=horizon[1]
+# holi<-hol.dummy(dates[ind])
+# y<-log(h.TP) # change here TP and SP
+# y.post <-y[ind,] 
+
+### Selection matrix
+# select<-matrix(rep(1,nrow(SP.price[ind,])),nrow=nrow(y.post),ncol=ncol(SP))
+
+# Manually adjust matrix columns:
+# for(i in c(1,2,3,4,5,6,8,9)){select[1:15,i]<-0}
+# select[14:28,7]<-0
+# for(i in c(5,8,10)){select[28:32,i]<-0}
+
+### Loop
+# for(i in 1:ncol(SP)){
+#   effect<-readRDS(file = paste("4effects-",i,".rds",sep=""))
+#   selecti<-select[,i]
+#   y.post.rep<- matrix(y.post[,i],nrow = sum(ind),ncol=1000)
+#   y.diff <- y.post.rep[selecti==1,] - effect[[1]]$predict$post.pred.1[selecti==1,1,]
+#   holii<-holi[selecti==1]
+#   y.diff<-y.diff[holii==0,]
+#   causal1[i,]<-cbind(mean(colMeans(y.diff)),quantile(colMeans(y.diff),probs=0.025), quantile(colMeans(y.diff),probs=0.975) )
+# }
+
+### SECOND TIME HORIZON
+# ind<-dates>=int.date & dates<=horizon[2]
+# holi<-hol.dummy(dates[ind])
+# y<-log(h.TP) # change here TP and SP
+# y.post <-y[ind,] 
+
+### Selection matrix
+# select<-matrix(rep(1,nrow(SP.price[ind,])),nrow=nrow(y.post),ncol=ncol(SP))
+
+# Manually adjust matrix columns:
+# for(i in 1:4){select[1:15,i]<-0; select[70:86,i]<-0}
+# for(i in c(5,8)){select[1:15]<-0; select[28:43]<-0}
+# select[1:15,6]<-0 ; select[14:30,7]<-0 ; select[75:85,7]<-0 ; select[28:43,10]<-0
+
+
+### Loop
+# for(i in 1:ncol(SP)){
+#   effect<-readRDS(file = paste("4effects-",i,".rds",sep=""))
+#   selecti<-select[,i]
+#   y.post.rep<- matrix(y.post[,i],nrow = sum(ind),ncol=1000)
+#   y.diff <- y.post.rep[selecti==1,] - effect[[2]]$predict$post.pred.1[selecti==1,1,]
+#   holii<-holi[selecti==1]
+#   y.diff<-y.diff[holii==0,]
+#   causal2[i,]<-cbind(mean(colMeans(y.diff)),quantile(colMeans(y.diff),probs=0.025), quantile(colMeans(y.diff),probs=0.975) )
+# }
+
+### THIRD TIME HORIZON
+
+# ind<-dates>=int.date & dates<=horizon[3]
+# holi<-hol.dummy(dates[ind])
+# y<-log(h.TP) # change here TP and SP
+# y.post <-y[ind,] 
+
+### Selection matrix
+# select<-matrix(rep(1,nrow(SP.price[ind,])),nrow=nrow(y.post),ncol=ncol(SP))
+
+# Manually adjust matrix columns:
+# for(i in 1:3){select[1:15,i]<-0; select[70:86,i]<-0; select[141:155,i]<-0; select[195:209]<-0}
+# select[1:15,4]<-0 ; select[70:86,4]<-0 ; select[97:113,4]<-0 ; select[141:155,4]<-0
+# select[1:15,5]<-0 ; select[28:43,5]<-0 ; 
+# select[1:15,6]<-0 ; select[141:155,6]<-0
+# select[14:30,7]<-0 ; select[75:85,7]<-0 ; 
+# select[1:15,8]<-0 ; select[28:43,8]<-0 ; select[141:155,8]<-0 
+# select[1:15,9]<-0 ; select[141:155,9]<-0
+# select[28:43,10]<-0 ; select[97:113,10]<-0 ; select[141:155,10]<-0
+
+### Loop
+# for(i in 1:ncol(SP)){
+#   effect<-readRDS(file = paste("4effects-",i,".rds",sep=""))
+#   selecti<-select[,i]
+#   y.post.rep<- matrix(y.post[,i],nrow = sum(ind),ncol=1000)
+#   y.diff <- y.post.rep[selecti==1,] - effect[[3]]$predict$post.pred.1[selecti==1,1,]
+#   holii<-holi[selecti==1]
+#   y.diff<-y.diff[holii==0,]
+#   causal3[i,]<-cbind(mean(colMeans(y.diff)),quantile(colMeans(y.diff),probs=0.025), quantile(colMeans(y.diff),probs=0.975) )
+# }
+
+
+
+
+
+

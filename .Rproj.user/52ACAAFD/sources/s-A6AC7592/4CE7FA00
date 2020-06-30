@@ -7,13 +7,13 @@
     "folds" : "",
     "hash" : "0",
     "id" : "4CE7FA00",
-    "lastKnownWriteTime" : 1593428687,
-    "last_content_update" : 1593428687,
-    "path" : "~/CausalMBSTS/R/causal_mbsts.R",
+    "lastKnownWriteTime" : 1593512339,
+    "last_content_update" : 1593512339274,
+    "path" : "~/GitHub/CausalMBSTS/R/causal_mbsts.R",
     "project_path" : "R/causal_mbsts.R",
     "properties" : {
-        "cursorPosition" : "136,75",
-        "scrollLine" : "159"
+        "cursorPosition" : "33,10",
+        "scrollLine" : "26"
     },
     "relative_order" : 8,
     "source_on_save" : false,
