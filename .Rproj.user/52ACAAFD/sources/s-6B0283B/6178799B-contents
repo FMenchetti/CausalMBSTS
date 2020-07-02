@@ -25,7 +25,7 @@ causal.mbsts(
 \arguments{
 \item{Smodel}{A multivariate state space model of class 'SSModel'.}
 
-\item{X}{Optional T x N matrix of predictors.}
+\item{X}{Optional t x N matrix of predictors.}
 
 \item{y}{t x d matrix of observations.}
 
@@ -67,11 +67,35 @@ the observed outcome of each time series and the mean of the ppd (credible inter
 computed accordingly).
 }
 \examples{
-y <- cbind(rnorm(100), rnorm(100, 2, 3))
-X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-dates <- seq(as.Date('2020-01-10'),as.Date('2020-01-10')+99, 1)
-int.date <- as.Date('2020-04-01')
-y[dates >= int.date, ] <- y[dates >= int.date, ]+2
-model <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=4, Q = matrix(NA,2,2)))
-causal <- causal.mbsts(model, X = X, y = y, dates = dates, int.date = int.date, s0.eps = diag(2), s0.k = diag(2), niter = 100, burn = 10)
+# Generating a panel of observations (d = 3) and a vector of dates
+set.seed(1)
+y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
+           seq(100.25,200,by=0.25)*0.05 + rnorm(400),
+           seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
+dates <- seq(as.Date('2019-01-10'),as.Date('2019-01-10')+399, 1)
+
+# Adding a fictional intervention and four covariates (they should be related to the outcome but unaffected by the intervention). To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
+int.date <- as.Date('2019-11-05')
+y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
+x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
+x2 <- y[,2]*0.1 + rnorm(dim(y)[1],0,0.5)
+x3 <- y[,3]*1.2 + rnorm(dim(y)[1],0,0.5)
+x4 <- rnorm(dim(y)[1], 5, 10)
+X <- cbind(x1, x2, x3, x4)
+
+# Some plots
+par(mfrow=c(1,3))
+for(i in 1:dim(y.new)[2]){
+  plot(y.new[,i], x = dates, type='l', col='cadetblue', xlab='', ylab='', main= bquote(Y[.(i)]))
+  lines(y[,i], x = dates, col='orange')
+  }
+par(mfrow=c(1,4))
+for(i in 1:dim(X)[2]){
+  plot(X[,i], type='l', col = 'darkgreen', x = dates, xlab='', ylab='', main = bquote(x[.(i)]))
+  }
+
+# Model definition (local level + seasonal model)
+model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
+causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 1000, burn = 100, horizon = c('2019-12-05','2020-02-13'))
+causal.1$general.effect
 }

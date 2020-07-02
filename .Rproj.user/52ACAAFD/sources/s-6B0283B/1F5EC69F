@@ -1,19 +1,21 @@
 {
     "collab_server" : "",
     "contents" : "",
-    "created" : 1592931256434.000,
+    "created" : 1593423658249.000,
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "780489196",
-    "id" : "862B4C88",
-    "lastKnownWriteTime" : 1592930626,
-    "last_content_update" : 1592930626,
+    "hash" : "0",
+    "id" : "1F5EC69F",
+    "lastKnownWriteTime" : 1593688264,
+    "last_content_update" : 1593688264,
     "path" : "~/GitHub/CausalMBSTS/R/predict_mbsts.R",
     "project_path" : "R/predict_mbsts.R",
     "properties" : {
+        "cursorPosition" : "25,27",
+        "scrollLine" : "0"
     },
-    "relative_order" : 6,
+    "relative_order" : 8,
     "source_on_save" : false,
     "source_window" : "",
     "type" : "r_source"

@@ -61,14 +61,14 @@ An object of class 'mbsts' which is a list with the following components
 MCMC to sample from the joint posterior of model parameters in an mbsts model.
 }
 \examples{
-## Example 1 : local level + seasonal
+## Example 1 : local level + seasonal (d = 3)
 y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
 model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
 mcmc.1 <- mbsts.mcmc(model.1, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 
-## Example 2 : local level + seasonal + covariates
+## Example 2 : local level + seasonal + covariates (d = 2)
 y <- cbind(rnorm(100), rnorm(100, 2, 3))
 X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
 model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))

@@ -5,14 +5,14 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "2515380975",
+    "hash" : "0",
     "id" : "5DF0F9D6",
-    "lastKnownWriteTime" : 1593535192,
-    "last_content_update" : 1593535192930,
+    "lastKnownWriteTime" : 1593688264,
+    "last_content_update" : 1593688264,
     "path" : "~/GitHub/CausalMBSTS/R/plot_mbsts.R",
     "project_path" : "R/plot_mbsts.R",
     "properties" : {
-        "cursorPosition" : "8,3",
+        "cursorPosition" : "19,12",
         "scrollLine" : "0",
         "tempName" : "Untitled1"
     },

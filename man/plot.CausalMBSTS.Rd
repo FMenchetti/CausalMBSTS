@@ -4,27 +4,40 @@
 \alias{plot.CausalMBSTS}
 \title{Plotting function for object of class CausalMBSTS}
 \usage{
-\method{plot}{CausalMBSTS}(CausalMBSTS, int.date, type = c("impact", "forecast", "ppchecks"))
+\method{plot}{CausalMBSTS}(
+  CausalMBSTS,
+  int.date,
+  type = c("impact", "forecast", "ppchecks"),
+  prob = NULL
+)
 }
 \arguments{
 \item{CausalMBSTS}{Object of class 'CausalMBSTS'}
 
 \item{int.date}{Date of the intervention.}
 
-\item{type}{A character string indicating the type of plot to be produced. Possible values in 'type = c("impact","forecast","ppchecks", "inclusion.probs")'.}
+\item{type}{A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
+
+\item{prob}{Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.}
 }
 \value{
 
 }
 \description{
-Function to plot the results of the causal analysis using 'causal.mbsts'
+Given an object of class 'CausalMBSTS', the function draws: i) the plot of the estimated (pointwise) causal impact; ii) the original time series plotted against the predicted counterfactual; iii) posterior predictive checks; iv) regressor inclusion probabilities (only for models with a regression component).
 }
 \details{
-"impact" plots the general causal effect at every time points in the post period.
-"forecast" plots the observed time series against the predicted counterfactual.
-"ppchecks" draws posterior predictive checks for the model estimated in the pre period.
-"inclusion.probs" plots the regressors inclusion probabilities.
+'impact' plots the general causal effect at every time points in the post period.
+'forecast' plots the observed time series against the predicted counterfactual.
+'ppchecks' draws posterior predictive checks for the model estimated in the pre period.
+'inclusion.probs' plots the regressors inclusion probabilities.
 }
 \examples{
-plot(causal)
+plot(causal.1, type = 'inclusion.probs', prob = 0.1)
+# as expected, x4 is rarely included in the model
+par(mar = c(2,2,2,2))
+par(mfrow=c(2,3))
+plot(causal.1, type = c('impact', 'forecast'))
+par(mfrow=c(3,4))
+plot(causal.1, type = 'ppchecks', int.date = int.date)
 }
