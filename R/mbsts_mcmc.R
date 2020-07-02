@@ -66,9 +66,9 @@
 #' model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
 #' mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
-mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter, 
+mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter,
     burn, ping = NULL) {
-    
+
     # MCMC to sample from the joint posterior of model parameters in an mbsts model.
     # For now, the case without contemporaneous predictors variables is not allowed
     #
@@ -102,21 +102,21 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
     #   beta        : N x p x 'niter' array containing the draws from the posterior distribution
     #                 of the regression coefficient matrix, p(beta | Sigma_eps, z)
     #   ...         : maybe not needed
-    
+
     ### Dimensionalities & other inputs
     p <- dim(y)[2]  # number of time series
-    
+
     # set default H (Zellner's g-prior)
     if (!is.null(X) & is.null(H)) {
         H <- inv(crossprod(X))
     }
-    
+
     # set default ping
     if (is.null(ping)) {
         ping <- 0.1 * niter
     }
     sequence <- seq(ping, niter, by = ping)
-    
+
     # set default nu0.k and nu0.eps
     if (is.null(nu0.k)) {
         nu0.k <- p + 2
@@ -124,16 +124,18 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
     if (is.null(nu0.eps)) {
         nu0.eps <- p + 2
     }
-    
+
     # model definition
     Smodel$H[, , 1] <- rInvWishart(1, df = nu0.eps, Sigma = s0.eps)[, , 1]
+
+    # substitute the following lines with Smodel$Q[,,1] <- stateVarianceDef(Smodel, nu0.k, s0.k)
     Q <- list()
     for (i in 1:length(unique(attr(Smodel, "eta_types")))) {
         Q[[i]] <- rInvWishart(1, df = nu0.k, Sigma = s0.k)[, , 1]
     }
     Q <- block.m(Q)
     Smodel$Q[, , 1] <- Q
-    
+
     # get dim
     y <- Smodel$y
     t <- dim(y)[1]  # number of time points
@@ -141,86 +143,86 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
     k <- K/p  # number of state disturbances for each time series
     M <- dim(Smodel$T)[1]  # tot number of states
     m <- M/p  # number of states for each time series
-    
+
     ### Empty arrays to store MCMC iterations
     eta.samples <- array(NA, c(nrow(y), K, niter - burn))
     eta.names <- unique(c(t(outer(attr(Smodel, "eta_types"), attr(Smodel$y, "dimnames")[[2]], paste))))
     colnames(eta.samples) <- eta.names
-    
+
     Sigma.states <- array(NA, c(K, K, niter - burn))
     colnames(Sigma.states) <- attr(Smodel, "eta_types")
     rownames(Sigma.states) <- attr(Smodel, "eta_types")
-    
+
     eps.samples <- array(NA, c(nrow(y), p, niter - burn))
     Sigma.obs <- array(NA, c(p, p, niter - burn))
-    
+
     states.samples <- array(NA, c(nrow(y), M, niter - burn))
     colnames(states.samples) <- dimnames(Smodel$T)[[1]]
-    
+
     if (!is.null(X)) {
         Z <- matrix(NA, niter - burn, dim(X)[2])
         BETA <- array(0, c(dim(X)[2], p, niter - burn))
     }
-    
+
     ### MCMC
-    
+
     for (i in 1:niter) {
-        
+
         # Monitoring status
         if (i %in% sequence) {
             print(i)
         }
-        
+
         ### STEP 1: Durbin & Koopman simulation smoother from KFAS package
         states <- simulateSSM(Smodel, type = "states")[, , 1]
         eta <- array(simulateSSM(Smodel, type = "eta"), c(t, p, k))
         eps <- simulateSSM(Smodel, type = "epsilon")[, , 1]
-        
+
         ### STEP 2: Sampling each Sigma.k from its posterior, p(Sigma_k | eta) ~ IW (nu.k, s.k)
-        
+
         # 2.1. posterior mean
         nu.k <- nu0.k + t
-        
-        # 2.2. posterior variance
+
+        # 2.2. posterior variance # substitute 2.2 with Sigma.k <- stateVarianceDef(Smodel, nu.k, s.k)
         Sigma.k <- list()
         for (j in 1:k) {
             eta.k <- eta[, , j]
             s.k <- s0.k + crossprod(eta.k)
             Sigma.k[[j]] <- rInvWishart(1, nu.k, s.k)[, , 1]
         }
-        
+
         # 2.3. the simulation smoother in Step 1 inherits the new posterior variance
         Sigma.k <- block.m(Sigma.k)
         Smodel$Q <- array(Sigma.k, c(K, K, 1))
-        
-        
+
+
         if (is.null(X)) {
-            
+
             ### STEP 3: Sampling Sigma.eps from its posterior, p(Sigma.eps | eps) ~ IW(nu.eps, s.eps )
-            
+
             # 3.1. posterior mean
             nu.eps <- nu0.eps + t
-            
+
             # 3.2. posterior variance
             s.eps <- s0.eps + crossprod(eps)
             Sigma.eps <- rInvWishart(1, nu.eps, s.eps)[, , 1]
-            
+
             # 3.3. the simulation smoother in Step 1 inherits the new posterior variance
             Smodel$H <- array(Sigma.eps, c(p, p, 1))
-            
+
         } else {
-            
+
             ### STEP 3: Sampling p(z)
-            
+
             # 3.1. response variable with time series component subtracted out
             y.star <- y - tcrossprod(states, Smodel$Z[, , 1])
-            
+
             # 3.2. data augmentation step, i.e. initializing a selection vector z
             #      with all elements equal 1 (meaning that at first all regressors are selected).
             #      Given this selection, the log-likelihood is computed.
             z <- rep.int(1, dim(X)[2])
             lpy.c <- lpy.X(y.star, X[, z == 1, drop = F], H = H, nu0.eps = nu0.eps, s0.eps = s0.eps)
-            
+
             # 3.3. exploring the space of all possible models: at each step we change one element of z
             #      from 1 to 0 while the others z_-j are held fixed and compute the log-likelihood of the
             #      resulting model. Under the assumption that the prior probabilities are the same (see
@@ -231,7 +233,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
             for (j in sample(1:dim(X)[2])) {
                 zp <- z
                 zp[j] <- 1 - zp[j]
-                lpy.p <- lpy.X(y.star, X[, zp == 1, drop = F], H = H[zp == 1, zp == 1, drop = F], 
+                lpy.p <- lpy.X(y.star, X[, zp == 1, drop = F], H = H[zp == 1, zp == 1, drop = F],
                   nu0.eps = nu0.eps, s0.eps = s0.eps)
                 r <- (lpy.p - lpy.c) * (-1)^(zp[j] == 0)
                 z[j] <- rbinom(1, 1, 1/(1 + exp(-r)))
@@ -239,9 +241,9 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
                   lpy.c <- lpy.p
                 }
             }
-            
+
             ### STEP 4: Sampling Sigma.eps from its posterior, p(Sigma.eps | Yt, z)
-            
+
             # 4.1. posterior mean and variance
             if (sum(z) == 0) {
                 nu.eps <- nu0.eps + t
@@ -252,21 +254,21 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
                 nu.eps <- nu0.eps + t
                 s.eps <- s0.eps + crossprod(y.star) - crossprod(M, inv(W)) %*% M
             }
-            
-            
+
+
             # 4.2. the simulation smoother in Step 1 inherits the new posterior variance
             Sigma.eps <- rInvWishart(1, nu.eps, s.eps)[, , 1]
             Smodel$H <- array(Sigma.eps, c(p, p, 1))
-            
+
             ### STEP 5: Sampling Beta from its posterior, p(Beta | Yt, Sigma, zeta)
-            
+
             if (sum(z) == 0) {
                 beta <- matrix(0, nrow = ncol(X), ncol = p)
             } else {
                 beta <- rmatrixnorm(n = 1, mean = M, L = W, R = Sigma.eps, force = T)
             }
         }
-        
+
         # Save results
         if (i > burn) {
             eta.samples[, , i - burn] <- matrix(eta, ncol = K)
@@ -280,17 +282,17 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
             }
         }
     }
-    
+
     if (!is.null(X)) {
-        list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples, 
-            Sigma.eta = Sigma.states, Sigma.eps = Sigma.obs, Z.beta = Z, beta = BETA, X = X, y = y, 
+        list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples,
+            Sigma.eta = Sigma.states, Sigma.eps = Sigma.obs, Z.beta = Z, beta = BETA, X = X, y = y,
             Z = Smodel$Z, T = Smodel$T, R = Smodel$R, niter = niter, burn = burn)
     } else {
-        list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples, 
-            Sigma.eta = Sigma.states, Sigma.eps = Sigma.obs, y = y, Z = Smodel$Z, T = Smodel$T, R = Smodel$R, 
+        list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples,
+            Sigma.eta = Sigma.states, Sigma.eps = Sigma.obs, y = y, Z = Smodel$Z, T = Smodel$T, R = Smodel$R,
             niter = niter, burn = burn)
     }
-    
+
     class(list) <- "mbsts"
     return(list)
 }
@@ -301,33 +303,70 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
 ######################################################################################
 
 lpy.X <- function(y, X, H, s0.eps, nu0.eps) {
-    
+
     # get dimensions
     t <- dim(y)[1]
     p <- dim(y)[2]
-    
+
     # log-likelihood
     if (dim(X)[2] == 0) {
         nu.eps <- nu0.eps + t
         s.eps <- s0.eps + crossprod(y)
-        -(p * t/2) * log(pi) + (nu0.eps/2) * log(det(s0.eps)) + lmvgamma(nu.eps/2, p) - lmvgamma(nu0.eps/2, 
+        -(p * t/2) * log(pi) + (nu0.eps/2) * log(det(s0.eps)) + lmvgamma(nu.eps/2, p) - lmvgamma(nu0.eps/2,
             p) - (nu.eps/2) * log(det(s.eps))
     } else {
         W <- inv(crossprod(X) + inv(H))
         M <- tcrossprod(W, X) %*% y
         nu.eps <- nu0.eps + t
         s.eps <- s0.eps + crossprod(y) - crossprod(M, solve(W, M))
-        (p/2) * log(det(inv(H) %*% W)) - (p * t/2) * log(pi) + (nu0.eps/2) * log(det(s0.eps)) + lmvgamma(nu.eps/2, 
+        (p/2) * log(det(inv(H) %*% W)) - (p * t/2) * log(pi) + (nu0.eps/2) * log(det(s0.eps)) + lmvgamma(nu.eps/2,
             p) - lmvgamma(nu0.eps/2, p) - (nu.eps/2) * log(det(s.eps))
     }
 }
 
+######################################################################################
+## Function for the definition of the state variances
+######################################################################################
+
+# maybe change the notation (nu instead of nu0.k and s insted of s0.k)
+
+stateVarianceDef<-function(Smodel, nu0.k, s0.k){
+  d <- attr(Smodel,"p")
+  comp <- attr(Smodel, "state_types")
+
+  if("level" %in% comp | "slope" %in% comp){
+    if( "slope" %in% comp ){ degree <- 2 } else { degree <- 1}
+
+    Q.trend <- matrix(0, d*degree, d*degree)
+    for(i in 1:degree){
+      # si campiona dalla prior
+      Q <- rInvWishart(1 , nu0.k, s0.k)[,,1]
+      Q.trend[seq(from = i, by = degree, length = d), seq(from = i, by = degree, length = d)] <- Q
+    }
+  } else { Q.trend <- NA}
+
+  if("seasonal" %in% comp){
+    Q.seas <- rInvWishart(1, nu0.k, s0.k)[,,1]
+  } else {Q.seas <- NA}
+
+  if("cycle" %in% comp){
+    Q.cycle<-matrix(0, 2*d, 2*d)
+    for(i in 1:2){
+      Q<-rInvWishart(1, nu0.k, s0.k)[,,1]
+      Q.cycle[seq(from=i, by=2, length=d), seq(from=i, by=2, length=d)]<-Q
+    }
+  } else {Q.cycle <- NA}
+
+  Q<-block.m(list(Q.trend, Q.seas, Q.cycle))
+  return(Q)
+}
 
 ######################################################################################
 ## Function for creating block matrices given a list of matrices
 ######################################################################################
 
 block.m <- function(m) {
+    m <- m[!is.na(m)]
     matrix <- m[[1]]
     n <- length(m)
     ind <- if (n > 1) {
