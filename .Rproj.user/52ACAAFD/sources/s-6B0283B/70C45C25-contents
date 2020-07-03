@@ -127,14 +127,14 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
 
     # model definition
     Smodel$H[, , 1] <- rInvWishart(1, df = nu0.eps, Sigma = s0.eps)[, , 1]
-
+    Smodel$Q[, , 1] <- stateVarianceDef(Smodel, nu = nu0.k , s = s0.k)
     # substitute the following lines with Smodel$Q[,,1] <- stateVarianceDef(Smodel, nu0.k, s0.k)
-    Q <- list()
-    for (i in 1:length(unique(attr(Smodel, "eta_types")))) {
-        Q[[i]] <- rInvWishart(1, df = nu0.k, Sigma = s0.k)[, , 1]
-    }
-    Q <- block.m(Q)
-    Smodel$Q[, , 1] <- Q
+    # Q <- list()
+    # for (i in 1:length(unique(attr(Smodel, "eta_types")))) {
+      #  Q[[i]] <- rInvWishart(1, df = nu0.k, Sigma = s0.k)[, , 1]
+    # }
+    # Q <- block.m(Q)
+    # Smodel$Q[, , 1] <- Q
 
     # get dim
     y <- Smodel$y
@@ -146,11 +146,12 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
 
     ### Empty arrays to store MCMC iterations
     eta.samples <- array(NA, c(nrow(y), K, niter - burn))
-    eta.names <- unique(c(t(outer(attr(Smodel, "eta_types"), attr(Smodel$y, "dimnames")[[2]], paste))))
+    eta.names <- etaNamesDef(Smodel) # that's really ugly...is it possible to find an alternative to degree.1 and degree.2?
+    #eta.names <- unique(c(t(outer(attr(Smodel, "eta_types"), attr(Smodel$y, "dimnames")[[2]], paste))))
     colnames(eta.samples) <- eta.names
 
     Sigma.states <- array(NA, c(K, K, niter - burn))
-    colnames(Sigma.states) <- attr(Smodel, "eta_types")
+    colnames(Sigma.states) <- attr(Smodel, "eta_types") # eta.names it's maybe better
     rownames(Sigma.states) <- attr(Smodel, "eta_types")
 
     eps.samples <- array(NA, c(nrow(y), p, niter - burn))
@@ -175,7 +176,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
 
         ### STEP 1: Durbin & Koopman simulation smoother from KFAS package
         states <- simulateSSM(Smodel, type = "states")[, , 1]
-        eta <- array(simulateSSM(Smodel, type = "eta"), c(t, p, k))
+        eta <- simulateSSM(Smodel, type = "eta")
         eps <- simulateSSM(Smodel, type = "epsilon")[, , 1]
 
         ### STEP 2: Sampling each Sigma.k from its posterior, p(Sigma_k | eta) ~ IW (nu.k, s.k)
@@ -183,17 +184,19 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
         # 2.1. posterior mean
         nu.k <- nu0.k + t
 
-        # 2.2. posterior variance # substitute 2.2 with Sigma.k <- stateVarianceDef(Smodel, nu.k, s.k)
-        Sigma.k <- list()
-        for (j in 1:k) {
-            eta.k <- eta[, , j]
-            s.k <- s0.k + crossprod(eta.k)
-            Sigma.k[[j]] <- rInvWishart(1, nu.k, s.k)[, , 1]
-        }
+        # 2.2. posterior variance
+        s.k <- etaPosteriorScaleMatrix(eta, eta_names, Smodel, s0.k)
+        Sigma.k <- stateVarianceDef(Smodel, nu.k, s.k)
+        #Sigma.k <- list()
+        #for (j in 1:k) {
+         #   eta.k <- eta[, , j]
+         #    s.k <- s0.k + crossprod(eta.k)
+        #    Sigma.k[[j]] <- rInvWishart(1, nu.k, s.k)[, , 1]
+        # }
 
         # 2.3. the simulation smoother in Step 1 inherits the new posterior variance
-        Sigma.k <- block.m(Sigma.k)
-        Smodel$Q <- array(Sigma.k, c(K, K, 1))
+        # Sigma.k <- block.m(Sigma.k)
+        Smodel$Q[,,1] <- Sigma.k
 
 
         if (is.null(X)) {
@@ -271,7 +274,8 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
 
         # Save results
         if (i > burn) {
-            eta.samples[, , i - burn] <- matrix(eta, ncol = K)
+            # eta.samples[, , i - burn] <- matrix(eta, ncol = K)
+            eta.samples[, , i - burn] <- eta
             Sigma.states[, , i - burn] <- Sigma.k
             eps.samples[, , i - burn] <- eps
             Sigma.obs[, , i - burn] <- Sigma.eps
@@ -328,37 +332,111 @@ lpy.X <- function(y, X, H, s0.eps, nu0.eps) {
 ## Function for the definition of the state variances
 ######################################################################################
 
-# maybe change the notation (nu instead of nu0.k and s insted of s0.k)
-
-stateVarianceDef<-function(Smodel, nu0.k, s0.k){
+stateVarianceDef<-function(Smodel, nu, s){
   d <- attr(Smodel,"p")
-  comp <- attr(Smodel, "state_types")
+  comp <- attr(Smodel, "eta_types")
 
-  if("level" %in% comp | "slope" %in% comp){
+  if("level" %in% comp ){
     if( "slope" %in% comp ){ degree <- 2 } else { degree <- 1}
 
     Q.trend <- matrix(0, d*degree, d*degree)
     for(i in 1:degree){
-      # si campiona dalla prior
-      Q <- rInvWishart(1 , nu0.k, s0.k)[,,1]
+      if(is.list(s)){
+        Q <- rInvWishart(1 , nu, s[[paste("degree.",i,sep="")]])[,,1]
+      } else {Q <- rInvWishart(1 , nu, s)[,,1]}
       Q.trend[seq(from = i, by = degree, length = d), seq(from = i, by = degree, length = d)] <- Q
     }
   } else { Q.trend <- NA}
 
   if("seasonal" %in% comp){
-    Q.seas <- rInvWishart(1, nu0.k, s0.k)[,,1]
+    if(is.list(s)){
+      Q.seas <- rInvWishart(1, nu, s[["seasonal"]])[,,1]
+    } else {Q.seas <- rInvWishart(1, nu, s)[,,1]}
   } else {Q.seas <- NA}
 
   if("cycle" %in% comp){
     Q.cycle<-matrix(0, 2*d, 2*d)
     for(i in 1:2){
-      Q<-rInvWishart(1, nu0.k, s0.k)[,,1]
+      if(is.list(s)){
+        Q<-rInvWishart(1, nu, s[[paste("cycle.",i,sep="")]])[,,1]
+      } else {Q<-rInvWishart(1, nu, s)[,,1]}
       Q.cycle[seq(from=i, by=2, length=d), seq(from=i, by=2, length=d)]<-Q
     }
   } else {Q.cycle <- NA}
 
   Q<-block.m(list(Q.trend, Q.seas, Q.cycle))
   return(Q)
+}
+
+######################################################################################
+## Function for generating the names of the state disturbances
+######################################################################################
+
+etaNamesDef<-function(Smodel){
+  d <- attr(Smodel,"p")
+  comp <- attr(Smodel, "eta_types")
+
+  if("level" %in% comp ){
+    if( "slope" %in% comp ){ degree <- 2 } else { degree <- 1}
+    names_trend <-c()
+    for(i in 1:degree){
+      names_trend[i] <- paste("degree.",i, sep="")
+    }
+    names_trend <- paste0(names_trend, rep(attr(Smodel$y, "dimnames")[[2]], each = degree))
+  } else {names_trend <- NULL}
+
+  if("seasonal" %in% comp){
+    names_seas <- "seasonal"
+    names_seas <- paste0(names_seas, attr(Smodel$y, "dimnames")[[2]])
+  } else {names_seas <- NULL}
+
+  if("cycle" %in% comp){
+    names_cycle <- c()
+    for(i in 1:2){
+      names_cycle[i] <- paste("cycle.",i,sep="")
+    }
+    names_cycle <- paste0(names_cycle, rep(attr(Smodel$y, "dimnames")[[2]], each = 2))
+  } else {names_cycle <- NULL}
+
+  eta_names <- c(names_trend, names_seas, names_cycle)
+  return(eta_names)
+}
+
+######################################################################################
+## Function for computing the posterior scale matrix of the state disturbances
+######################################################################################
+
+etaPosteriorScaleMatrix <- function(eta_sim, eta_names, Smodel, s0.k){
+
+  # Step 1: eta_sim is returned from 'simulateSSM' as t x K x 1;
+  #         the following re-shapes eta_sim in an array t x d x k
+  #         so to have a t x d matrix of disturbances for each state that has a disturbance term
+  comp <- unique(attr(Smodel, "eta_type"))
+  p<-attr(Smodel, "p")
+  k <- length(unique(comp))
+  comp<-gsub(comp, pattern = "slope", replacement = "degree.2")
+  comp<-gsub(comp, pattern = "level", replacement = "degree.1")
+
+  if("cycle" %in% comp){
+    comp <- gsub(comp, pattern = "cycle", replacement = "cycle.1")
+    comp <- c(comp, "cycle.2")
+    k <- k+1
+  }
+
+  eta <- array(NA, c(nrow(eta_sim), p, k))
+
+  for(i in 1:length(comp)){
+    eta[,,i] <- eta_sim[, grep(eta_names, pattern = comp[i]),]
+  }
+
+  # Step 2 : computing the posterior scale matrix for each disturbance
+  S.k <- list()
+  for(i in 1:k){
+    S.k[[i]] <- s0.k + crossprod(eta[,,i])
+  }
+  names(S.k) <- comp
+
+  return(S.k)
 }
 
 ######################################################################################
