@@ -188,7 +188,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
         nu.k <- nu0.k + t
 
         # 2.2. posterior variance
-        s.k <- etaPosteriorScaleMatrix(eta, eta_names, Smodel, s0.k)
+        s.k <- etaPosteriorScaleMatrix(eta, eta.names, Smodel, s0.k)
         Sigma.k <- stateVarianceDef(Smodel, nu.k, s.k)
         #Sigma.k <- list()
         #for (j in 1:k) {
