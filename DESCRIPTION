@@ -15,7 +15,6 @@ Depends:
 Imports: 
     CholWishart,
     forecast,
-    KFAS,
     MASS,
     Matrix,
     MixMatrix
