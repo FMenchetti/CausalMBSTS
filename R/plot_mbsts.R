@@ -62,6 +62,8 @@ plot.CausalMBSTS <- function(CausalMBSTS, int.date, type = c("impact", "forecast
 
 # ----------------------------------------------------------------------------------------
 
+#' @import graphics
+#' 
 plotImpact <- function(CausalMBSTS, int.date) {
     dates <- CausalMBSTS$dates
     dim <- dim(CausalMBSTS$mean.general)
@@ -99,6 +101,8 @@ plotImpact <- function(CausalMBSTS, int.date) {
 
 #------------------------------------------------------------------------------------------------
 
+#' @import graphics
+#' 
 plotForecast <- function(CausalMBSTS, int.date) {
     dates <- CausalMBSTS$dates
     y <- CausalMBSTS$y
@@ -135,6 +139,8 @@ plotForecast <- function(CausalMBSTS, int.date) {
 
 #--------------------------------------------------------------------------------------------
 
+#' @import graphics stats
+#' 
 plotChecks <- function(CausalMBSTS, int.date) {
     dates <- CausalMBSTS$dates
     ind <- dates < int.date
@@ -167,6 +173,8 @@ plotChecks <- function(CausalMBSTS, int.date) {
 
 #-----------------------------------------------------------------------------------------------
 
+#' @import graphics
+#' 
 plotInclusionProb <- function(CausalMBSTS, prob = prob) {
     if (is.null(prob)) 
         {

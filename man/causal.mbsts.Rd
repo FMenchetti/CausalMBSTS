@@ -54,7 +54,16 @@ causal.mbsts(
 \item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.}
 }
 \value{
-
+A list with the following components
+  \item{mcmc}{An object of class 'mbsts'.}
+  \item{predict}{A list with the same components as those produced by the function 'predict.mbsts'}
+  \item{y}{Observations in the analysis period excluding 'holi' (if provided).}
+  \item{dates}{Dates in the analysis period excluding 'holi' (if provided).}
+  \item{general}{General causal effect for all iterations.}
+  \item{general.effect}{the estimated average causal effect and a 95\% credible interval.}
+  \item{mean.general}{pointwise effect (may be not necessary).}
+  \item{lower.general}{lower bound of the pointwise effect (may be not necessary).}
+  \item{upper.general}{Upper bound of the pointwise effect (may be not necessary).}
 }
 \description{
 It estimates the general effect of an intervention in a multivariate time series

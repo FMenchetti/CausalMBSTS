@@ -29,10 +29,10 @@ regression component, then the new matrix of predictors 'newdata' must be provid
 Note that NA values are not allowed in the new regressor matrix.
 }
 \examples{
-Example 1 :
+## Example 1 :
 pred.1 <- predict(mcmc.1, steps.ahead = 10)
 
-Example 2 :
+## Example 2 :
 newdata <- cbind(rnorm(30), rt(30, 2))
 pred.2 <- predict(mcmc.2, newdata)
 }
