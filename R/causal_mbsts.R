@@ -141,6 +141,7 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
     ind <- dates < int.date
     X.pre <- X[ind, ]
     X.post <- X[!ind, ]
+    if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- dimnames(Smodel$y)[[2]] 
     y.pre <- y[ind, ]
     y.post <- y[!ind, ]
     
