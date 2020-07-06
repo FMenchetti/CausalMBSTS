@@ -30,7 +30,7 @@
 #' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
-#' @param burn Desidered burn-in, set by default to 0.1 * niter.
+#' @param burn Desired burn-in, set by default to 0.1 * niter.
 #' @param ping A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.
 #'
 #' @return An object of class 'mbsts' which is a list with the following components
@@ -85,7 +85,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
     #   s0.k    : Scale matrix of the Inverse-Wishart prior for each Sigma_k.
     #   s0.eps  : Scale matrix of the Inverse-Wishart prior for Sigma.eps
     #   niter   : number of MCMC iteration
-    #   burn    : desidered burn-in, set by default to 0.1 * niter
+    #   burn    : desired burn-in, set by default to 0.1 * niter
     #   ping    : logical, if TRUE a status message it's printed every iterations decile.
     #             Defaults to TRUE.
     #
@@ -139,7 +139,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
     # get dim
     y <- Smodel$y
     t <- dim(y)[1]  # number of time points
-    K <- dim(Smodel$R)[2]  # tot number of state disurbances
+    K <- dim(Smodel$R)[2]  # tot number of state disturbances
     k <- K/p  # number of state disturbances for each time series
     M <- dim(Smodel$T)[1]  # tot number of states
     m <- M/p  # number of states for each time series
@@ -175,8 +175,11 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
         }
 
         ### STEP 1: Durbin & Koopman simulation smoother from KFAS package
+        set.seed(i)
         states <- simulateSSM(Smodel, type = "states")[, , 1]
+        set.seed(i)
         eta <- simulateSSM(Smodel, type = "eta")
+        set.seed(i)
         eps <- simulateSSM(Smodel, type = "epsilon")[, , 1]
 
         ### STEP 2: Sampling each Sigma.k from its posterior, p(Sigma_k | eta) ~ IW (nu.k, s.k)
@@ -230,7 +233,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.k = NULL, s0.k, nu0.eps =
             #      from 1 to 0 while the others z_-j are held fixed and compute the log-likelihood of the
             #      resulting model. Under the assumption that the prior probabilities are the same (see
             #      pdf) the difference between the two log-likelihood is the log odd, log(oj) and we can
-            #      simulate p(z) from a bernulli distribution having \pi = 1/(1+oj^(-1)). Finally, if the
+            #      simulate p(z) from a Bernoulli distribution having \pi = 1/(1+oj^(-1)). Finally, if the
             #      resulting zj element has changed (z = zp) then lpy.p becomes the new likelihood and the
             #      cycle re-starts from the new z selection vectors.
             for (j in sample(1:dim(X)[2])) {
