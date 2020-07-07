@@ -89,9 +89,9 @@
 
 
 
-causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, horizon = NULL, H = NULL, 
+causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, horizon = NULL, H = NULL,
     nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
-    
+
     # It estimates the general effect of an intervention in a multivariate time series
     # setting. It uses MCMC to sample from the joint posterior distribution of the parameters
     # of an MBSTS model before the intervention/treatment occurred. Then, it uses the
@@ -100,7 +100,7 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
     # distribution (ppd). Then the causal effect is computed by taking the difference between
     # the observed outcome of each time series and the mean of the ppd (credible intervals are
     # computed accordingly).
-    
+
     # Args:
     #   Smodel   : a multivariate state space model of class 'SSModel'
     #   X        : a T x N matrix of predictors
@@ -135,44 +135,44 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
     #   adj.dates    : dates in the analysis period without holidays
     #   original.series : original time series (maybe not needed)
     #   original.dates : original dates (maybe not needed)
-    
+
     ### STEP 1. Dividing pre and post periods
-    
+
     ind <- dates < int.date
     X.pre <- X[ind, ]
     X.post <- X[!ind, ]
-    if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- dimnames(Smodel$y)[[2]] 
+    if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- dimnames(Smodel$y)[[2]]
     y.pre <- y[ind, ]
     y.post <- y[!ind, ]
-    
+
     # Estimating the model only in the pre-period
     Smodel$y <- y.pre
     attr(Smodel, "n") <- as.integer(nrow(y.pre))
-    
+
     ### STEP 2. MCMC
-    
-    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.k = nu0.k, s0.k = s0.k, nu0.eps = nu0.eps, 
+
+    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.k = nu0.k, s0.k = s0.k, nu0.eps = nu0.eps,
         s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
-    
+
     ### STEP 3. In- and out-of-sample forecasts from the ppd
     predict <- predict(mbsts, steps.ahead = dim(y)[1], X.post)
-    
+
     ### STEP 4. Causal effect estimation
     p <- dim(mbsts$y)[2]
     burn <- mbsts$burn
     y.post.rep <- array(y.post, c(nrow(y.post), ncol(y.post), niter - burn))
     y.diff <- y.post.rep - predict$post.pred.1
-    
-    # removing holidays
+
+    # removing given dates
     holi <- holi[dates >= int.date]
     if (!is.null(holi)) {
         y.diff <- y.diff[holi == 0, , ]
         dates <- dates[holi == 0]
         y <- y[holi == 0, ]
     }
-    
-    # General causal effect
-    
+
+    # General causal effect (temporal average and cumulative sum)
+
     if (length(horizon) > 0) {
         mean.effect <- list()
         lower.bound <- list()
@@ -183,19 +183,26 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
             mean.effect[[i]] <- apply(y.diff[ind, , ], c(1, 2), mean)
             lower.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.025)
             upper.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.975)
-            joint.effect[[i]] <- cbind(mean = apply(colMeans(y.diff[ind, , ]), 1, mean), lower = apply(colMeans(y.diff[ind, 
-                , ]), 1, quantile, probs = 0.025), upper = apply(colMeans(y.diff[ind, , ]), 1, quantile, 
-                probs = 0.975))
+            joint.effect[[i]] <- cbind(mean = apply(colMeans(y.diff[ind, , ]), 1, mean),
+                                       lower = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = 0.025),
+                                       upper = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = 0.975),
+                                       cum.sum = apply(colSums(y.diff[ind, , ]), 1, mean),
+                                       cum.lower = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.025),
+                                       cum.upper = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.975))
         }
     } else {
         mean.effect <- apply(y.diff, c(1, 2), mean)
         lower.bound <- apply(y.diff, c(1, 2), quantile, probs = 0.025)
         upper.bound <- apply(y.diff, c(1, 2), quantile, probs = 0.975)
-        joint.effect <- cbind(mean = apply(colMeans(y.diff), 1, mean), lower = apply(colMeans(y.diff), 
-            1, quantile, probs = 0.025), upper = apply(colMeans(y.diff), 1, quantile, probs = 0.975))
+        joint.effect <- cbind(mean = apply(colMeans(y.diff), 1, mean),
+                              lower = apply(colMeans(y.diff), 1, quantile, probs = 0.025),
+                              upper = apply(colMeans(y.diff), 1, quantile, probs = 0.975),
+                              cum.sum = apply(colSums(y.diff[ind, , ]), 1, mean),
+                              cum.lower = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.025),
+                              cum.upper = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.975))
     }
-    
-    list <- list(mcmc = mbsts, predict = predict, y = y, dates = dates, general = y.diff, general.effect = joint.effect, 
+
+    list <- list(mcmc = mbsts, predict = predict, y = y, dates = dates, general = y.diff, general.effect = joint.effect,
         mean.general = mean.effect, lower.general = lower.bound, upper.general = upper.bound)
     class(list) <- "CausalMBSTS"
     return(list)
