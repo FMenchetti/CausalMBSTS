@@ -24,7 +24,7 @@
 #' Note that NA values are not allowed in the new regressor matrix.
 #'
 #' @importFrom MASS mvrnorm
-#' @param mbsts An object of class 'mbsts'.
+#' @param object An object of class 'mbsts'.
 #' @param steps.ahead An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
 #' @param newdata Optional matrix of new data. Only required when 'mbsts' contains a regression component.
 #'
@@ -44,7 +44,7 @@
 #' newdata <- cbind(rnorm(30), rt(30, 2))
 #' pred.2 <- predict(mcmc.2, newdata)
 
-predict.mbsts <- function(mbsts, steps.ahead, newdata = NULL) {
+predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     
     # Given an object of class 'mbsts' and the number of 'steps.ahead' in the future to be
     # forecaste, this function provides in-sample forecasts and out-of-sample forecasts,
@@ -53,7 +53,7 @@ predict.mbsts <- function(mbsts, steps.ahead, newdata = NULL) {
     # Note that NA values are not allowed in the new regressor matrix.
     #
     # Args:
-    #   mbsts       : an object of class 'mbsts'
+    #   object       : an object of class 'mbsts'
     #   steps.ahead : an integer value specifying the number of steps ahead to be forecasted
     #   newdata     : optional matrix of new data
     #
@@ -64,7 +64,7 @@ predict.mbsts <- function(mbsts, steps.ahead, newdata = NULL) {
     #   post.pred   : (T + S) x p x niter array combining in- and out-of-sample forecasts
     
     ### Dimensionalities & other objects
-    
+    mbsts <- object
     # get dim
     t <- dim(mbsts$y)[1]  # number of time points
     K <- dim(mbsts$R)[2]  # tot number of state disurbances

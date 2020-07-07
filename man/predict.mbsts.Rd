@@ -4,14 +4,15 @@
 \alias{predict.mbsts}
 \title{Prediction for a given multivariate Bayesian structural time series model}
 \usage{
-\method{predict}{mbsts}(mbsts, steps.ahead, newdata = NULL)
+\method{predict}{mbsts}(object, steps.ahead, newdata = NULL, ...)
 }
 \arguments{
-\item{mbsts}{An object of class 'mbsts'.}
+\item{object}{An object of class 'mbsts'.}
 
 \item{steps.ahead}{An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.}
 
 \item{newdata}{Optional matrix of new data. Only required when 'mbsts' contains a regression component.}
+\item{...}{Arguments passed to other methods (currently unused).}
 }
 \value{
 Returns a list with the following components

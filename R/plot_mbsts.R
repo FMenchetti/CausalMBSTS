@@ -9,7 +9,7 @@
 #' 'inclusion.probs' plots the regressors inclusion probabilities.
 #'
 #' @importFrom forecast Acf
-#' @param CausalMBSTS Object of class 'CausalMBSTS'
+#' @param x Object of class 'CausalMBSTS'
 #' @param int.date Date of the intervention.
 #' @param type A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
 #' @param  prob Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.
@@ -25,14 +25,14 @@
 #' plot(causal.1, type = c('impact', 'forecast'))
 #' par(mfrow=c(3,4))
 #' plot(causal.1, type = 'ppchecks', int.date = int.date)
-plot.CausalMBSTS <- function(CausalMBSTS, int.date, type = c("impact", "forecast", "ppchecks"), prob = NULL) {
+plot.CausalMBSTS <- function(x, int.date, type = c("impact", "forecast", "ppchecks"), prob = NULL, ...) {
     
     # Given an object of class 'CausalMBSTS', the function draws:
     # i) the plot of the estimated (pointwise) causal impact; ii) the original time series plotted against the predicted counterfactual;
     # iii) posterior predictive checks; iv) regressor inclusion probabilities (only for models with a regression component).
     
     # Args:
-    #  CausalMBSTS:  Object of class 'CausalMBSTS'
+    #  x:  Object of class 'CausalMBSTS'
     #  int.date   :  Date of the intervention.
     #  type       :  A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
     #  prob       :  Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.
@@ -40,22 +40,22 @@ plot.CausalMBSTS <- function(CausalMBSTS, int.date, type = c("impact", "forecast
     
     ### Causal effect plot
     if ("impact" %in% type) {
-        plotImpact(CausalMBSTS, int.date = int.date)
+        plotImpact(x, int.date = int.date)
     }
     
     ### Plot Observed vs Forecast
     if ("forecast" %in% type) {
-        plotForecast(CausalMBSTS, int.date = int.date)
+        plotForecast(x, int.date = int.date)
     }
     
     ### Posterior predictive checks
     if ("ppchecks" %in% type) {
-        plotChecks(CausalMBSTS, int.date = int.date)
+        plotChecks(x, int.date = int.date)
     }
     
     # Regressor index plot
     if ("inclusion.probs" %in% type) {
-        plotInclusionProb(CausalMBSTS, prob = prob)
+        plotInclusionProb(x, prob = prob)
     }
     
 }
@@ -175,7 +175,7 @@ plotChecks <- function(CausalMBSTS, int.date) {
 
 #' @import graphics
 #' 
-plotInclusionProb <- function(CausalMBSTS, prob = prob) {
+plotInclusionProb <- function(CausalMBSTS, prob = .5) {
     if (is.null(prob)) 
         {
             prob <- 0.5

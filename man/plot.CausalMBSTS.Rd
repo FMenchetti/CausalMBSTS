@@ -4,21 +4,18 @@
 \alias{plot.CausalMBSTS}
 \title{Plotting function for object of class CausalMBSTS}
 \usage{
-\method{plot}{CausalMBSTS}(
-  CausalMBSTS,
-  int.date,
-  type = c("impact", "forecast", "ppchecks"),
-  prob = NULL
-)
+\method{plot}{CausalMBSTS}(x, int.date, type = c("impact", "forecast", "ppchecks"), prob = NULL, ...)
 }
 \arguments{
-\item{CausalMBSTS}{Object of class 'CausalMBSTS'}
+\item{x}{Object of class 'CausalMBSTS'}
 
 \item{int.date}{Date of the intervention.}
 
 \item{type}{A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
 
 \item{prob}{Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.}
+
+\item{...}{Arguments passed to other methods (currently unused).}
 }
 \value{
 
