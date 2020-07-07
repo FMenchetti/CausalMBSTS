@@ -24,9 +24,10 @@
 #' Note that NA values are not allowed in the new regressor matrix.
 #'
 #' @importFrom MASS mvrnorm
-#' @param mbsts An object of class 'mbsts'.
+#' @param object An object of class 'mbsts'.
 #' @param steps.ahead An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
 #' @param newdata Optional matrix of new data. Only required when 'mbsts' contains a regression component.
+#' @param ... Arguments passed to other methods (currently unused).
 #'
 #' @return Returns a list with the following components
 #' \describe{
@@ -38,22 +39,32 @@
 #'
 #' @examples
 #' ## Example 1 :
+#' y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
+#'            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
+#'            rnorm(400, 5,1))
+#' model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
+#' mcmc.1 <- mbsts.mcmc(model.1, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+#' 
 #' pred.1 <- predict(mcmc.1, steps.ahead = 10)
 #'
-#' ## Example 2 :
-#' newdata <- cbind(rnorm(30), rt(30, 2))
-#' pred.2 <- predict(mcmc.2, newdata)
+#' ## Example 2 : CURRENTLY BROKEN
+#' #y <- cbind(rnorm(100), rnorm(100, 2, 3))
+#' #X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
+#' #model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
+#' #mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+#' #newdata <- cbind(rnorm(30), rt(30, 2))
+#' #pred.2 <- predict(mcmc.2, newdata)
 
-predict.mbsts <- function(mbsts, steps.ahead, newdata = NULL) {
+predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     
     # Given an object of class 'mbsts' and the number of 'steps.ahead' in the future to be
     # forecaste, this function provides in-sample forecasts and out-of-sample forecasts,
-    # both based on drawing from the posterior predictive distribution. If 'mbsts' contains
+    # both based on drawing from the posterior predictive distribution. If 'x' contains
     # a regression component, then the new matrix of predictors 'newdata' must be provided.
     # Note that NA values are not allowed in the new regressor matrix.
     #
     # Args:
-    #   mbsts       : an object of class 'mbsts'
+    #   object       : an object of class 'mbsts'
     #   steps.ahead : an integer value specifying the number of steps ahead to be forecasted
     #   newdata     : optional matrix of new data
     #
@@ -64,7 +75,7 @@ predict.mbsts <- function(mbsts, steps.ahead, newdata = NULL) {
     #   post.pred   : (T + S) x p x niter array combining in- and out-of-sample forecasts
     
     ### Dimensionalities & other objects
-    
+    mbsts <- object
     # get dim
     t <- dim(mbsts$y)[1]  # number of time points
     K <- dim(mbsts$R)[2]  # tot number of state disurbances

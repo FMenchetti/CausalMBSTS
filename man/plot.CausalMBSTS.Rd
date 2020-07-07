@@ -4,24 +4,21 @@
 \alias{plot.CausalMBSTS}
 \title{Plotting function for object of class CausalMBSTS}
 \usage{
-\method{plot}{CausalMBSTS}(
-  CausalMBSTS,
-  int.date,
-  type = c("impact", "forecast", "ppchecks"),
-  prob = NULL
-)
+\method{plot}{CausalMBSTS}(x, int.date, type = c("impact", "forecast", "ppchecks"), prob = NULL, ...)
 }
 \arguments{
-\item{CausalMBSTS}{Object of class 'CausalMBSTS'}
+\item{x}{Object of class 'CausalMBSTS'}
 
 \item{int.date}{Date of the intervention.}
 
 \item{type}{A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
 
 \item{prob}{Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.}
+
+\item{...}{Arguments passed to other methods (currently unused).}
 }
 \value{
-
+NULL, invisibly.
 }
 \description{
 Given an object of class 'CausalMBSTS', the function draws: i) the plot of the estimated (pointwise) causal impact; ii) the original time series plotted against the predicted counterfactual; iii) posterior predictive checks; iv) regressor inclusion probabilities (only for models with a regression component).
@@ -33,11 +30,31 @@ Given an object of class 'CausalMBSTS', the function draws: i) the plot of the e
 'inclusion.probs' plots the regressors inclusion probabilities.
 }
 \examples{
-plot(causal.1, type = 'inclusion.probs', prob = 0.1)
+
+y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
+           seq(100.25,200,by=0.25)*0.05 + rnorm(400),
+           seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
+dates <- seq(as.Date('2019-01-10'),as.Date('2019-01-10')+399, 1)
+
+# Adding a fictional intervention and four covariates (they should be related to the outcome but unaffected by the intervention). To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
+int.date <- as.Date('2019-11-05')
+y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
+x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
+x2 <- y[,2]*0.1 + rnorm(dim(y)[1],0,0.5)
+x3 <- y[,3]*1.2 + rnorm(dim(y)[1],0,0.5)
+x4 <- rnorm(dim(y)[1], 5, 10)
+X <- cbind(x1, x2, x3, x4)
+
+# Model definition (local level + seasonal model)
+model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
+causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20, burn = 5, horizon = c('2019-12-05','2020-02-13'))
+
+## Plotting
+plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
 # as expected, x4 is rarely included in the model
 par(mar = c(2,2,2,2))
 par(mfrow=c(2,3))
-plot(causal.1, type = c('impact', 'forecast'))
+plot(causal.1, int.date = int.date, type = c('impact', 'forecast'))
 par(mfrow=c(3,4))
 plot(causal.1, type = 'ppchecks', int.date = int.date)
 }

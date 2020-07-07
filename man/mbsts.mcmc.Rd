@@ -34,7 +34,7 @@ mbsts.mcmc(
 
 \item{niter}{Number of MCMC iteration.}
 
-\item{burn}{Desidered burn-in, set by default to 0.1 * niter.}
+\item{burn}{Desired burn-in, set by default to 0.1 * niter.}
 
 \item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.}
 }
