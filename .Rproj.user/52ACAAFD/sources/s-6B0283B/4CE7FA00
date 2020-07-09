@@ -5,15 +5,15 @@
     "dirty" : false,
     "encoding" : "UTF-8",
     "folds" : "",
-    "hash" : "1395402298",
+    "hash" : "3568302241",
     "id" : "4CE7FA00",
-    "lastKnownWriteTime" : 1594131323,
-    "last_content_update" : 1594131323619,
+    "lastKnownWriteTime" : 1594302164,
+    "last_content_update" : 1594302164807,
     "path" : "~/GitHub/CausalMBSTS/R/causal_mbsts.R",
     "project_path" : "R/causal_mbsts.R",
     "properties" : {
-        "cursorPosition" : "190,43",
-        "scrollLine" : "185"
+        "cursorPosition" : "220,62",
+        "scrollLine" : "208"
     },
     "relative_order" : 8,
     "source_on_save" : false,

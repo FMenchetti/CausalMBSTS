@@ -42,13 +42,13 @@
 #'   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma_eps.}
 #'   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
 #'   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
-#'   \item{X}{?}
-#'   \item{y}{?}
-#'   \item{Z}{?}
-#'   \item{T}{?}
-#'   \item{R}{?}
-#'   \item{niter}{?}
-#'   \item{burn}{?}
+#'   \item{X}{Predictor matrix.}
+#'   \item{y}{Matrix of observations.}
+#'   \item{Z}{(1 x m) selection matrix of the observation equation.}
+#'   \item{T}{(m x m) matrix of the state equation.}
+#'   \item{R}{(1 x k) matrix selecting the state disturbances.}
+#'   \item{niter}{Number of mcmc iterations.}
+#'   \item{burn}{Burn-in.}
 #' }
 #' @export
 #'

@@ -76,12 +76,13 @@ the observed outcome of each time series and the mean of the ppd (credible inter
 computed accordingly).
 }
 \examples{
-# Generating a panel of observations (d = 3) and a vector of dates
+## Example 1 (daily data, d = 3, local level + seasonal + covariates)
+# Generating a panel of observations and a vector of dates
 set.seed(1)
 y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
-dates <- seq(as.Date('2019-01-10'),as.Date('2019-01-10')+399, 1)
+dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 400)
 
 # Adding a fictional intervention and four covariates (they should be related to the outcome but unaffected by the intervention). To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
 int.date <- as.Date('2019-11-05')
@@ -103,8 +104,26 @@ for(i in 1:dim(X)[2]){
   plot(X[,i], type='l', col = 'darkgreen', x = dates, xlab='', ylab='', main = bquote(x[.(i)]))
   }
 
-# Model definition (local level + seasonal model)
+# Model definition
 model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
 causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 causal.1$general.effect
+
+## Example 2 (weekly data, local level + cycle, d = 2)
+set.seed(1)
+t <- seq(from = 0,to = 4*pi, length.out=300)
+y <- cbind(3*sin(2*t)+rnorm(300), 2*cos(2*t) + rnorm(300))
+dates <- seq.Date(from = as.Date("2015-01-01"), by = "week", length.out=300)
+int.date <- as.Date("2020-02-27")
+y[dates >= int.date,] <- y[dates >= int.date,]+2
+
+# Some plots
+plot(y = y[,1], x=dates, type="l", col="cadetblue")
+lines(y = y[,2], x = dates, col = "orange")
+abline(v=int.date, col="red")
+
+# Model definition
+model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMcycle(period=75, Q = matrix(NA)))
+causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.k = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+causal.2$general.effect
 }
