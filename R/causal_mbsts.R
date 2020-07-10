@@ -34,8 +34,8 @@
 #' @param holi Optional vector of the same length as the time series, specifying the dates (if any) that should be excluded from the computation of the causal effect in the post period. The elements of the vector must be either 0 (the corresponding date is retained) or 1 (the corresponding date is excluded).
 #' @param horizon Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
-#' @param nu0.k Degrees of freedom of the Inverse-Wishart prior for each Sigma_k. Set by default to n0.k = d + 2 where d is the number of time series in the multivariate model.
-#' @param s0.k Scale matrix of the Inverse-Wishart prior for each Sigma_k.
+#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.
+#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma_r.
 #' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
@@ -85,7 +85,7 @@
 #'
 #' # Model definition
 #' model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-#' causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+#' causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 #' causal.1$general.effect
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -103,13 +103,13 @@
 #'
 #' # Model definition
 #' model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMcycle(period=75, Q = matrix(NA)))
-#' causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.k = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+#' causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 #' causal.2$general.effect
 
 
 
 causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, horizon = NULL, H = NULL,
-    nu0.k = NULL, s0.k, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
+    nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
 
     # It estimates the general effect of an intervention in a multivariate time series
     # setting. It uses MCMC to sample from the joint posterior distribution of the parameters
@@ -122,27 +122,27 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
 
     # Args:
     #   Smodel   : a multivariate state space model of class 'SSModel'
-    #   X        : a T x N matrix of predictors
+    #   X        : a t x P matrix of predictors
     #   y        : time series of observations
     #   dates    : a vector of dates
     #   int.date : date of the intervention
     #   holi     : Optional, 0-1 vector of the same length as the time series specifying whether 'dates[i]' should be included ('holi[i]' = 0) or excluded ('holi[i]' = 1)
     #   horizon  : Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.
-    #   H        : desidered N x N variance-covariance matrix between regression coefficients.
+    #   H        : desidered P x P variance-covariance matrix between regression coefficients.
     #             The default is Zellner's g-prior, H = (X'X)^(-1)
-    #   nu0.k    : degrees of freedom of the Inverse-Wishart prior for each Sigma_k.
-    #             The default is the smallest integer such that the expectation of eta_k exists,
-    #             that is, nu0.k = p + 2 where p is the number of time series in the
+    #   nu0.r    : degrees of freedom of the Inverse-Wishart prior for each Sigma_r.
+    #             The default is the smallest integer such that the expectation of eta_r exists,
+    #             that is, nu0.r = d + 2 where d is the number of time series in the
     #             multivariate model
-    #   nu0.eps  : degrees of freedom of the Inverse-Wishart prior for Sigma_eps, the default is p+2.
-    #   s0.k     : Scale matrix of the Inverse-Wishart prior for each Sigma_k.
+    #   nu0.eps  : degrees of freedom of the Inverse-Wishart prior for Sigma_eps, the default is d+2.
+    #   s0.r     : Scale matrix of the Inverse-Wishart prior for each Sigma_r.
     #   s0.eps   : Scale matrix of the Inverse-Wishart prior for Sigma.eps
     #   niter    : number of MCMC iteration
     #   burn     : desidered burn-in, set by default to 0.1 * niter
     #   ping     : logical, if TRUE a status message it's printed every iterations decile.
     #             Defaults to TRUE.
     #
-    # Value:
+    # Value: UPDATE
     #   joint.effect : the estimated average causal effect and a 95% credible interval
     #   joint        : joint causal effect for all iterations
     #   mean.joint   : pointwise effect
@@ -170,14 +170,14 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
 
     ### STEP 2. MCMC
 
-    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.k = nu0.k, s0.k = s0.k, nu0.eps = nu0.eps,
+    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
         s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
 
     ### STEP 3. In- and out-of-sample forecasts from the ppd
     predict <- predict(mbsts, steps.ahead = dim(y[!ind,])[1], X.post)
 
     ### STEP 4. Causal effect estimation
-    p <- dim(mbsts$y)[2]
+    # d <- dim(mbsts$y)[2]
     burn <- mbsts$burn
     y.post.rep <- array(y.post, c(nrow(y.post), ncol(y.post), niter - burn))
     y.diff <- y.post.rep - predict$post.pred.1

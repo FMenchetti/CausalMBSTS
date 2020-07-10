@@ -13,8 +13,8 @@ causal.mbsts(
   holi = NULL,
   horizon = NULL,
   H = NULL,
-  nu0.k = NULL,
-  s0.k,
+  nu0.r = NULL,
+  s0.r,
   nu0.eps = NULL,
   s0.eps,
   niter,
@@ -39,9 +39,9 @@ causal.mbsts(
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
 
-\item{nu0.k}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_k. Set by default to n0.k = d + 2 where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
 
-\item{s0.k}{Scale matrix of the Inverse-Wishart prior for each Sigma_k.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma_r.}
 
 \item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.}
 
@@ -106,7 +106,7 @@ for(i in 1:dim(X)[2]){
 
 # Model definition
 model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 causal.1$general.effect
 
 ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -124,6 +124,6 @@ abline(v=int.date, col="red")
 
 # Model definition
 model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMcycle(period=75, Q = matrix(NA)))
-causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.k = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 causal.2$general.effect
 }

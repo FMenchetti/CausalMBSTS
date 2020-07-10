@@ -43,7 +43,7 @@
 #'            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
 #'            rnorm(400, 5,1))
 #' model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-#' mcmc.1 <- mbsts.mcmc(model.1, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+#' mcmc.1 <- mbsts.mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 #'
 #' pred.1 <- predict(mcmc.1, steps.ahead = 10)
 #'
@@ -51,7 +51,7 @@
 #' y <- cbind(rnorm(100), rnorm(100, 2, 3))
 #' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
 #' model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
-#' mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+#' mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 #' newdata <- cbind(rnorm(30), rt(30, 2))
 #' pred.2 <- predict(mcmc.2, newdata = newdata)
 
@@ -69,18 +69,18 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     #   newdata     : optional matrix of new data
     #
     # Value:
-    #   post.pred.0 : T x p x niter array of in-sample forecasts
-    #   post.pred.1 : S x p x niter array out-of-sample forecasts, where S is the number of
+    #   post.pred.0 : T x d x niter array of in-sample forecasts
+    #   post.pred.1 : S x d x niter array out-of-sample forecasts, where S is the number of
     #                 forecasted periods (set to the length of provided new data)
-    #   post.pred   : (T + S) x p x niter array combining in- and out-of-sample forecasts
+    #   post.pred   : (T + S) x d x niter array combining in- and out-of-sample forecasts
 
     ### Dimensionalities & other objects
     mbsts <- object
     # get dim
     t <- dim(mbsts$y)[1]  # number of time points
-    K <- dim(mbsts$R)[2]  # tot number of state disurbances
-    p <- dim(mbsts$y)[2]  # number of time series
-    k <- K/p  # number of state disturbances for each time series
+    rr <- dim(mbsts$R)[2]  # tot number of state disurbances
+    d <- dim(mbsts$y)[2]  # number of time series
+    #r <- rr/d  # number of state disturbances for each time series
     M <- dim(mbsts$T)[1]  # tot number of states
 
     if (is.null(mbsts$X)) {
@@ -94,16 +94,16 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
 
 
     ### Empty arrays to store iterations
-    eta.new <- array(NA, c(step, K, niter))
+    eta.new <- array(NA, c(step, rr, niter))
 
     states.new <- array(NA, c(step, M, niter))
     colnames(states.new) <- colnames(mbsts$states.samples)
 
-    y.star <- array(NA, c(step, p, niter))
+    y.star <- array(NA, c(step, d, niter))
 
-    post.pred.0 <- array(NA, c(t, p, niter))  # storing in-sample draws
-    post.pred.1 <- array(NA, c(step, p, niter))  # storing out-of-samples draws
-    post.pred <- array(NA, c(t + step, p, niter))  # all together
+    post.pred.0 <- array(NA, c(t, d, niter))  # storing in-sample draws
+    post.pred.1 <- array(NA, c(step, d, niter))  # storing out-of-samples draws
+    post.pred <- array(NA, c(t + step, d, niter))  # all together
 
 
     for (i in 1:niter) {
@@ -145,7 +145,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
 
         # 2.1. Sampling new states
 
-        eta.new <- matrix(mvrnorm(1, rep(0, K), mbsts$Sigma.eta[, , i]), nrow = K)
+        eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.eta[, , i]), nrow = rr)
         states.new[1, , i] <- mbsts$T[, , 1] %*% matrix(mbsts$states.samples[last, , i], M) + mbsts$R[,
             , 1] %*% eta.new
 
@@ -155,7 +155,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
             NULL
         }
         for (j in ind) {
-            eta.new <- matrix(mvrnorm(1, rep(0, K), mbsts$Sigma.eta[, , i]), nrow = K)
+            eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.eta[, , i]), nrow = rr)
             states.new[j, , i] <- mbsts$T[, , 1] %*% matrix(states.new[j - 1, , i], nrow = M) + mbsts$R[,
                 , 1] %*% eta.new
         }
@@ -163,9 +163,9 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
         # 2.2. Sampling y*.new (note that in the simple case without covariates y*.new = eps)
 
         if (is.null(mbsts$X)) {
-            y.star[, , i] <- mvrnorm(1, rep(0, p), mbsts$Sigma.eps[, , i])
+            y.star[, , i] <- mvrnorm(1, rep(0, d), mbsts$Sigma.eps[, , i])
         } else {
-            y.star[, , i] <- newdata %*% mbsts$beta[, , i] + mvrnorm(1, rep(0, p), mbsts$Sigma.eps[,
+            y.star[, , i] <- newdata %*% mbsts$beta[, , i] + mvrnorm(1, rep(0, d), mbsts$Sigma.eps[,
                 , i])
         }
 

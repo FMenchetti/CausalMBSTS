@@ -37,7 +37,7 @@
 #'
 #' # Model definition
 #' model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-#' causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.k = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20, burn = 5, horizon = c('2019-12-05','2020-02-13'))
+#' causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20, burn = 5, horizon = c('2019-12-05','2020-02-13'))
 #'
 #' ## Plotting
 #' plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
@@ -58,7 +58,7 @@
 #'
 #' # Model definition
 #' model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMcycle(period=75, Q = matrix(NA)))
-#' causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.k = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+#' causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 #'
 #' # Plotting
 #' par(mfrow=c(2,4))
@@ -229,6 +229,5 @@ plotInclusionProb <- function(CausalMBSTS, prob = .5) {
     plot(apply(CausalMBSTS$mcmc$Z.beta, 2, mean)[select], type = "h", lwd = 2, ylab = expression(paste("Pr(",
         italic(z[j] == 1), "|", italic(y), ",X)", sep = "")), las = 2, xaxt = "none", xlab = "",
         cex.lab = 2)
-    axis(1, seq(1, ncol(X[, select]), 1), las = 2, labels = gsub(colnames(X)[select], pattern = "pezzi.",
-        replacement = ""), cex.axis = 2)
+    axis(1, seq(1, ncol(X[, select]), 1), las = 2, labels = colnames(X)[select], cex.axis = 2)
 }

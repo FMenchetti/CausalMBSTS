@@ -8,8 +8,8 @@ mbsts.mcmc(
   Smodel,
   X = NULL,
   H = NULL,
-  nu0.k = NULL,
-  s0.k,
+  nu0.r = NULL,
+  s0.r,
   nu0.eps = NULL,
   s0.eps,
   niter,
@@ -24,9 +24,9 @@ mbsts.mcmc(
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
 
-\item{nu0.k}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_k. Set by default to n0.k = d + 2 where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
 
-\item{s0.k}{Scale matrix of the Inverse-Wishart prior for each Sigma_k.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma_r.}
 
 \item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.}
 
@@ -41,10 +41,10 @@ mbsts.mcmc(
 \value{
 An object of class 'mbsts' which is a list with the following components
 \describe{
-  \item{eta.samples}{'niter' draws from the distribution of eta_k.}
+  \item{eta.samples}{'niter' draws from the distribution of eta_r.}
   \item{eps.samples}{'niter' draws from the distribution of eps.}
   \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-  \item{sigma.eta}{'niter' draws from the posterior distribution of Sigma_eta.}
+  \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma_r.}
   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma_eps.}
   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
@@ -52,7 +52,7 @@ An object of class 'mbsts' which is a list with the following components
   \item{y}{Matrix of observations.}
   \item{Z}{(1 x m) selection matrix of the observation equation.}
   \item{T}{(m x m) matrix of the state equation.}
-  \item{R}{(1 x k) matrix selecting the state disturbances.}
+  \item{R}{(1 x r) matrix selecting the state disturbances.}
   \item{niter}{Number of mcmc iterations.}
   \item{burn}{Burn-in.}
 }
@@ -66,11 +66,11 @@ y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
 model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
-mcmc.1 <- mbsts.mcmc(model.1, s0.k = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+mcmc.1 <- mbsts.mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 
 ## Example 2 : local level + seasonal + covariates (d = 2)
 y <- cbind(rnorm(100), rnorm(100, 2, 3))
 X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
 model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA,2,2)) + SSMseasonal(period=7, Q = matrix(NA,2,2)))
-mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.k = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 }
