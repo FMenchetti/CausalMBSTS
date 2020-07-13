@@ -170,7 +170,7 @@ causal.mbsts <- function(Smodel, X = NULL, y, dates, int.date, holi = NULL, hori
 
     ### STEP 2. MCMC
 
-    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = NULL, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
+    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
         s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
 
     ### STEP 3. In- and out-of-sample forecasts from the ppd
