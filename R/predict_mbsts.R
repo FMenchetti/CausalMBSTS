@@ -110,7 +110,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
 
         ### STEP 1: Get in-samples draws from the ppd.
 
-        # Details:  let theta = (alpha, beta, Sigma.eps, z, Sigma.eta),
+        # Details:  let theta = (alpha, beta, Sigma.eps, z, Sigma.r),
         #           during the MCMC we got samples from the joint posterior distribution p(theta|y). So
         #           now we can draw new values y.tilde from the posterior predictive distribution by simply
         #           taking the 'niter' draws from the joint p(theta|y) and substitute them into model equations
@@ -129,12 +129,12 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
 
         # Details: this time an out-of sample draw y.new is no more independent
         #          of past y given theta. To see that, let's say we want to sample y_t+k | Y_t.
-        #          This time, theta = (alpha_t+k,...,alpha_t+1, alpha_t, beta, Sigma.eps, z, Sigma.eta)
-        #          and from our MCMC we have just the posterior of (alpha_t, beta, Sigma.eps, z, Sigma.eta)
-        #          because we sampled from the full conditional p(alpha_t | Y_t, beta, Sigma.eps, z, Sigma.eta).
+        #          This time, theta = (alpha_t+k,...,alpha_t+1, alpha_t, beta, Sigma.eps, z, Sigma.r)
+        #          and from our MCMC we have just the posterior of (alpha_t, beta, Sigma.eps, z, Sigma.r)
+        #          because we sampled from the full conditional p(alpha_t | Y_t, beta, Sigma.eps, z, Sigma.r).
         #          Thus, to sample from y_t+k | y_t we should 'recover' the missing dependence structure
         #          p(alpha_t+k,...,alpha_t+1 | theta') where theta' is our 'old' theta, that is
-        #          theta' = alpha_t, beta, Sigma.eps, z, Sigma.eta. More details in the pdf.
+        #          theta' = alpha_t, beta, Sigma.eps, z, Sigma.r. More details in the pdf.
         #          Conversely, y*_t+k =  y_t+k - Z alpha_t+k is independent of y*_t given theta',
         #          because there's no more time component and we can just write y*.
         #          During the MCMC we sampled from the joint posterior p(beta,Sigma.eps,z|y*),
@@ -145,7 +145,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
 
         # 2.1. Sampling new states
 
-        eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.eta[, , i]), nrow = rr)
+        eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.r[, , i]), nrow = rr)
         states.new[1, , i] <- mbsts$T[, , 1] %*% matrix(mbsts$states.samples[last, , i], M) + mbsts$R[,
             , 1] %*% eta.new
 
@@ -155,7 +155,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
             NULL
         }
         for (j in ind) {
-            eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.eta[, , i]), nrow = rr)
+            eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.r[, , i]), nrow = rr)
             states.new[j, , i] <- mbsts$T[, , 1] %*% matrix(states.new[j - 1, , i], nrow = M) + mbsts$R[,
                 , 1] %*% eta.new
         }
