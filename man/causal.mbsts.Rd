@@ -7,7 +7,6 @@
 causal.mbsts(
   Smodel,
   X = NULL,
-  y,
   dates,
   int.date,
   holi = NULL,
@@ -26,8 +25,6 @@ causal.mbsts(
 \item{Smodel}{A multivariate state space model of class 'SSModel'.}
 
 \item{X}{Optional t x N matrix of predictors.}
-
-\item{y}{t x d matrix of observations.}
 
 \item{dates}{a vector of dates.}
 
@@ -52,6 +49,8 @@ causal.mbsts(
 \item{burn}{Desidered burn-in, set by default to 0.1 * niter.}
 
 \item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.}
+
+\item{y}{t x d matrix of observations.}
 }
 \value{
 A list with the following components
@@ -105,7 +104,7 @@ for(i in 1:dim(X)[2]){
   }
 
 # Model definition
-model.1 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMseasonal(period=7, Q = matrix(NA)))
+model.1 <- model(y, components = c("trend", "seasonal"), seas.period = 7)
 causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 causal.1$general.effect
 
@@ -123,7 +122,7 @@ lines(y = y[,2], x = dates, col = "orange")
 abline(v=int.date, col="red")
 
 # Model definition
-model.2 <- SSModel(y ~ SSMtrend(degree = 1, Q = matrix(NA)) + SSMcycle(period=75, Q = matrix(NA)))
+model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
 causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 causal.2$general.effect
 }
