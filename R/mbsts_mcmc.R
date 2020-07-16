@@ -108,7 +108,8 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps =
 
     # set default H (Zellner's g-prior)
     if (!is.null(X) & is.null(H)) {
-        H <- inv(crossprod(X))
+      X <- as.matrix(X)
+      H <- inv(crossprod(X))
     }
 
     # set default ping

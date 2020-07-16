@@ -86,6 +86,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     if (is.null(mbsts$X)) {
         step <- steps.ahead
     } else {
+        newdata <- as.matrix(newdata)
         step <- dim(newdata)[1]
     }  # number of obs to forecast
 
