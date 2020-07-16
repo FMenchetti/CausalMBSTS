@@ -25,55 +25,65 @@ causal.mbsts(
 \arguments{
 \item{Smodel}{A multivariate state space model of class 'SSModel'.}
 
-\item{X}{Optional t x N matrix of predictors.}
+\item{X}{Optional t x N data frame (or matrix) of predictors.}
 
-\item{y}{t x d matrix of observations.}
+\item{y}{t x d data frame (or matrix) of observations, where d is the number of time series in the multivariate model.}
 
-\item{dates}{a vector of dates.}
+\item{dates}{a vector of dates of length t (with elements of class "Date") that correspond to observations in y.}
 
-\item{int.date}{Date of the intervention.}
+\item{int.date}{Date of the intervention (must be of class Date).}
 
-\item{holi}{Optional vector of the same length as the time series, specifying the dates (if any) that should be excluded from the computation of the causal effect in the post period. The elements of the vector must be either 0 (the corresponding date is retained) or 1 (the corresponding date is excluded).}
+\item{holi}{Optional vector of length t, specifying the dates (if any) that should be excluded from the
+computation of the causal effect in the post period. The elements of the vector must be either 0
+(the corresponding date is retained) or 1 (the corresponding date is excluded).}
 
-\item{horizon}{Optional, vector of dates. If provided, a causal effect is computed for any time horizon. It defaults to the date of the last observation.}
+\item{horizon}{Optional, vector of dates (with elements of class "Date"). If provided, a causal effect
+is computed for the time horizon(s) between int.date and each specified date. Defaults to the date of the last observation.}
 
-\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
+\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).}
 
-\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
+Set by default to d + 2 (must be greater than d - 1).}
 
-\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma_r.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector of errors for state r. Must be a (d x d)
+positive definite. Default set to ???.}
 
-\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.}
+\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time
+series. Set by default to d + 2 (must be greater than d - 1).}
 
-\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps.}
+\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
+Must be a (d x d) positive definite. Default set to ???.}
 
-\item{niter}{Number of MCMC iteration.}
+\item{niter}{Number of MCMC iterations.}
 
-\item{burn}{Desidered burn-in, set by default to 0.1 * niter.}
+\item{burn}{Desired burn-in, set by default to 0.1 * niter.}
 
-\item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.}
+\item{ping}{A status message is printed every 'ping' iteration. Default set to 0.1 * 'niter'.}
 }
 \value{
-A list with the following components
+A list with the following components:
   \item{mcmc}{An object of class 'mbsts'.}
-  \item{predict}{A list with the same components as those produced by the function 'predict.mbsts'}
-  \item{y}{Observations in the analysis period excluding 'holi' (if provided).}
-  \item{dates}{Dates in the analysis period excluding 'holi' (if provided).}
+  \item{predict}{A list with the same components as those produced by the function \code{\link{predict.mbsts}}}
+  \item{y}{Observations in the analysis period (excluding 'holi' if provided).}
+  \item{dates}{Dates in the analysis period (excluding 'holi' if provided).}
   \item{general}{General causal effect for all iterations.}
-  \item{general.effect}{the estimated average causal effect and a 95\% credible interval.}
-  \item{mean.general}{pointwise effect (may be not necessary).}
-  \item{lower.general}{lower bound of the pointwise effect (may be not necessary).}
-  \item{upper.general}{Upper bound of the pointwise effect (may be not necessary).}
+  \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
+  \item{mean.general}{Pointwise effect.}
+  \item{lower.general}{Lower bound of the pointwise effect.}
+  \item{upper.general}{Upper bound of the pointwise effect.}
 }
 \description{
-It estimates the general effect of an intervention in a multivariate time series
+The function estimates the general effect of an intervention in a multivariate time series
 setting. It uses MCMC to sample from the joint posterior distribution of the parameters
 of an MBSTS model before the intervention/treatment occurred. Then, it uses the
-covariates post intervention to predict the counterfactual potential outcomes.
+post-intervention covariate values to predict the counterfactual potential outcomes.
 The prediction is done by sampling from the posterior predictive
-distribution (ppd). Then the causal effect is computed by taking the difference between
-the observed outcome of each time series and the mean of the ppd (credible intervals are
+distribution (PPD). Then the causal effect is computed by taking the difference between
+the observed outcome of each time series and the mean of the PPD (credible intervals are
 computed accordingly).
+}
+\details{
+{PERHAPS ADD MORE DETAILS OF THE PROCEDURE HERE}
 }
 \examples{
 ## Example 1 (daily data, d = 3, local level + seasonal + covariates)

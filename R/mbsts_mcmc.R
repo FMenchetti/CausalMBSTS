@@ -25,9 +25,9 @@
 #' @param Smodel A multivariate state space model of class 'SSModel'.
 #' @param X t x P optional matrix of predictors.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
-#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.
-#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma_r.
-#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.
+#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.
+#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r.
+#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps. Set by default to d + 2.
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
 #' @param burn Desired burn-in, set by default to 0.1 * niter.
@@ -38,8 +38,8 @@
 #'   \item{eta.samples}{'niter' draws from the distribution of eta_r.}
 #'   \item{eps.samples}{'niter' draws from the distribution of eps.}
 #'   \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-#'   \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma_r.}
-#'   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma_eps.}
+#'   \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma.r.}
+#'   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma.eps.}
 #'   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
 #'   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
 #'   \item{X}{Predictor matrix.}
@@ -176,7 +176,7 @@ mbsts.mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps =
         set.seed(i)
         eps <- simulateSSM(Smodel, type = "epsilon")[, , 1]
 
-        ### STEP 2: Sampling each Sigma.r from its posterior, p(Sigma_r | eta) ~ IW (nu.r, s.r)
+        ### STEP 2: Sampling each Sigma.r from its posterior, p(Sigma.r | eta) ~ IW (nu.r, s.r)
 
         # 2.1. posterior mean
         nu.r <- nu0.r + t
