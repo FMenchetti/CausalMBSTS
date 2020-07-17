@@ -9,7 +9,7 @@ causal.mbsts(
   X = NULL,
   dates,
   int.date,
-  holi = NULL,
+  excl.dates = NULL,
   horizon = NULL,
   H = NULL,
   nu0.r = NULL,
@@ -30,8 +30,8 @@ causal.mbsts(
 
 \item{int.date}{Date of the intervention (must be of class Date).}
 
-\item{holi}{Optional vector of length t, specifying the dates (if any) that should be excluded from the
-computation of the causal effect in the post period. The elements of the vector must be either 0
+\item{excl.dates}{Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
+computation of the causal effect. The elements of the vector must be either 0
 (the corresponding date is retained) or 1 (the corresponding date is excluded).}
 
 \item{horizon}{Optional, vector of dates (with elements of class "Date"). If provided, a causal effect
@@ -63,8 +63,8 @@ Must be a (d x d) positive definite. Default set to ???.}
 A list with the following components:
   \item{mcmc}{An object of class 'mbsts'.}
   \item{predict}{A list with the same components as those produced by the function \code{\link{predict.mbsts}}}
-  \item{y}{Observations in the analysis period (excluding 'holi' if provided).}
-  \item{dates}{Dates in the analysis period (excluding 'holi' if provided).}
+  \item{y}{Observations in the analysis period (excluding 'excl.dates' if provided).}
+  \item{dates}{Dates in the analysis period (excluding 'excl.dates' if provided).}
   \item{general}{General causal effect for all iterations.}
   \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
   \item{mean.general}{Pointwise effect.}

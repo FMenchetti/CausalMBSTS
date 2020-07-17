@@ -31,8 +31,8 @@
 #' @param y t x d data frame (or matrix) of observations, where d is the number of time series in the multivariate model.
 #' @param dates a vector of dates of length t (with elements of class "Date") that correspond to observations in y.
 #' @param int.date Date of the intervention (must be of class Date).
-#' @param holi Optional vector of length t, specifying the dates (if any) that should be excluded from the
-#' computation of the causal effect in the post period. The elements of the vector must be either 0
+#' @param excl.dates Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
+#' computation of the causal effect. The elements of the vector must be either 0
 #' (the corresponding date is retained) or 1 (the corresponding date is excluded).
 #' @param horizon Optional, vector of dates (with elements of class "Date"). If provided, a causal effect
 #' is computed for the time horizon(s) between int.date and each specified date. Defaults to the date of the last observation.
@@ -54,8 +54,8 @@
 #' @return A list with the following components:
 #'   \item{mcmc}{An object of class 'mbsts'.}
 #'   \item{predict}{A list with the same components as those produced by the function \code{\link{predict.mbsts}}}
-#'   \item{y}{Observations in the analysis period (excluding 'holi' if provided).}
-#'   \item{dates}{Dates in the analysis period (excluding 'holi' if provided).}
+#'   \item{y}{Observations in the analysis period (excluding 'excl.dates' if provided).}
+#'   \item{dates}{Dates in the analysis period (excluding 'excl.dates' if provided).}
 #'   \item{general}{General causal effect for all iterations.}
 #'   \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
 #'   \item{mean.general}{Pointwise effect.}
@@ -117,7 +117,7 @@
 
 
 
-causal.mbsts <- function(Smodel, X = NULL, dates, int.date, holi = NULL, horizon = NULL, H = NULL,
+causal.mbsts <- function(Smodel, X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL, H = NULL,
     nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
 
     ### STEP 1. Dividing pre and post periods
@@ -148,11 +148,11 @@ causal.mbsts <- function(Smodel, X = NULL, dates, int.date, holi = NULL, horizon
     y.diff <- y.post.rep - predict$post.pred.1
 
     # removing given dates
-    holi <- holi[dates >= int.date]
-    if (!is.null(holi)) {
-        y.diff <- y.diff[holi == 0, , ]
-        dates <- dates[holi == 0]
-        y <- y[holi == 0, ]
+    excl.dates <- excl.dates[dates >= int.date]
+    if (!is.null(excl.dates)) {
+        y.diff <- y.diff[excl.dates == 0, , ]
+        dates <- dates[excl.dates == 0]
+        y <- y[excl.dates == 0, ]
     }
 
     # General causal effect (temporal average and cumulative sum)
