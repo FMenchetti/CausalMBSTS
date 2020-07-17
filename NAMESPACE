@@ -2,6 +2,7 @@
 
 S3method(plot,CausalMBSTS)
 S3method(predict,mbsts)
+S3method(print,CausalMBSTS)
 export(causal.mbsts)
 export(mbsts.mcmc)
 export(model)

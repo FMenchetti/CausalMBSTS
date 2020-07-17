@@ -57,6 +57,7 @@ Must be a (d x d) positive definite. Default set to ???.}
 
 \item{ping}{A status message is printed every 'ping' iteration. Default set to 0.1 * 'niter'.}
 
+\item{y}{t x d data frame (or matrix) of observations, where d is the number of time series in the multivariate model.}
 }
 \value{
 A list with the following components:
@@ -113,8 +114,8 @@ for(i in 1:dim(X)[2]){
   }
 
 # Model definition
-model.1 <- model(y, components = c("trend", "seasonal"), seas.period = 7)
-causal.1 <- causal.mbsts(model.1, X = X, y = y.new, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+model.1 <- model(y.new, components = c("trend", "seasonal"), seas.period = 7)
+causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 causal.1$general.effect
 
 ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -132,6 +133,6 @@ abline(v=int.date, col="red")
 
 # Model definition
 model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
-causal.2 <- causal.mbsts(model.2, y = y, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 causal.2$general.effect
 }
