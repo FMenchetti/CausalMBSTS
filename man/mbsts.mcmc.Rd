@@ -24,11 +24,11 @@ mbsts.mcmc(
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
 
-\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma_r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
 
-\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma_r.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r.}
 
-\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma_eps. Set by default to d + 2.}
+\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps. Set by default to d + 2.}
 
 \item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps.}
 
@@ -44,8 +44,8 @@ An object of class 'mbsts' which is a list with the following components
   \item{eta.samples}{'niter' draws from the distribution of eta_r.}
   \item{eps.samples}{'niter' draws from the distribution of eps.}
   \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-  \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma_r.}
-  \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma_eps.}
+  \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma.r.}
+  \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma.eps.}
   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
   \item{X}{Predictor matrix.}
