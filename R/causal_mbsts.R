@@ -7,9 +7,9 @@
 ####  Content:          Joint causal effect estimation for MBSTS models           ####
 ####                                                                              ####
 ####                                                                              ####
-####  Main function :   causal.mbsts                                              ####
+####  Main function :   CausalMBSTS                                               ####
 ####  Dependencies:     predict.mbsts                                             ####
-####                    mbsts.mcmc (lpy.X,block.m)                                ####
+####                    as.mcmc                                                   ####
 ####                                                                              ####
 ######################################################################################
 ######################################################################################
@@ -26,9 +26,11 @@
 #' the observed outcome of each time series and the mean of the PPD (credible intervals are
 #' computed accordingly).
 #'
-#' @param Smodel A multivariate state space model of class 'SSModel'.
+#' @param y t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.
+#' @param components Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").
+#' @param seas.period Length of the seasonal pattern.
+#' @param cycle.period Length of the cycle pattern.
 #' @param X Optional t x N data frame (or matrix) of predictors.
-#' @param y t x d data frame (or matrix) of observations, where d is the number of time series in the multivariate model.
 #' @param dates a vector of dates of length t (with elements of class "Date") that correspond to observations in y.
 #' @param int.date Date of the intervention (must be of class Date).
 #' @param excl.dates Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
@@ -92,9 +94,8 @@
 #'   plot(X[,i], type='l', col = 'darkgreen', x = dates, xlab='', ylab='', main = bquote(x[.(i)]))
 #'   }
 #'
-#' # Model definition
-#' model.1 <- model(y.new, components = c("trend", "seasonal"), seas.period = 7)
-#' causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+#' # Causal effect estimation
+#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 #' causal.1$general.effect
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -110,39 +111,32 @@
 #' lines(y = y[,2], x = dates, col = "orange")
 #' abline(v=int.date, col="red")
 #'
-#' # Model definition
-#' model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
-#' causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+#' # Causal effect estimation
+#' causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 #' causal.2$general.effect
 
 
 
-causal.mbsts <- function(Smodel, X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL, H = NULL,
+CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL, H = NULL,
     nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
 
     ### STEP 1. Dividing pre and post periods
-    y <- Smodel$y
     ind <- dates < int.date
     X.pre <- X[ind, ]
     X.post <- X[!ind, ]
-    if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- dimnames(Smodel$y)[[2]]
+    if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- paste("y",seq(1,dim(y)[2],by=1), sep="")
     y.pre <- y[ind, ]
     y.post <- y[!ind, ]
 
-    # Estimating the model only in the pre-period
-    Smodel$y <- y.pre
-    attr(Smodel, "n") <- as.integer(nrow(y.pre))
-
     ### STEP 2. MCMC
-
-    mbsts <- mbsts.mcmc(Smodel = Smodel, X = X.pre, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
-        s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
+    mbsts <- as.mbsts(y = y.pre, components = components, seas.period = seas.period, cycle.period = cycle.period,
+                      X = X.pre, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
+                      s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
 
     ### STEP 3. In- and out-of-sample forecasts from the PPD
     predict <- predict(mbsts, steps.ahead = dim(y[!ind,])[1], X.post)
 
     ### STEP 4. Causal effect estimation
-    # d <- dim(mbsts$y)[2]
     burn <- mbsts$burn
     y.post.rep <- array(y.post, c(nrow(y.post), ncol(y.post), niter - burn))
     y.diff <- y.post.rep - predict$post.pred.1
@@ -156,7 +150,6 @@ causal.mbsts <- function(Smodel, X = NULL, dates, int.date, excl.dates = NULL, h
     }
 
     # General causal effect (temporal average and cumulative sum)
-
     if (length(horizon) > 0) {
         mean.effect <- list()
         lower.bound <- list()
