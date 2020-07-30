@@ -35,16 +35,13 @@ Note that NA values are not allowed in the new regressor matrix.
 y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
-model.1 <- model(y, components = c("trend", "seasonal"), seas.period = 7)
-mcmc.1 <- mbsts.mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
-
-pred.1 <- predict(mcmc.1, steps.ahead = 10)
+mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+pred.1 <- predict(mbsts.1, steps.ahead = 10)
 
 ## Example 2
 y <- cbind(rnorm(100), rnorm(100, 2, 3))
 X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-model.2 <- model(y, components = c("trend", "seasonal"), seas.period = 7)
-mcmc.2 <- mbsts.mcmc(model.2, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 newdata <- cbind(rnorm(30), rt(30, 2))
-pred.2 <- predict(mcmc.2, newdata = newdata)
+pred.2 <- predict(mbsts.2, newdata = newdata)
 }

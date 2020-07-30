@@ -16,7 +16,7 @@ model(y, components, seas.period = NULL, cycle.period = NULL)
 \item{cycle.period}{Length of the cycle pattern.}
 }
 \value{
-
+An object of class 'SSModel'.
 }
 \description{
 Multivariate structural time series model definition
@@ -32,3 +32,4 @@ model.1 <- model(y, components = c("trend","seasonal"), seas.period = 7)
 y <- cbind(3*sin(2*t)+rnorm(300), 2*cos(2*t) + rnorm(300))
 model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
 }
+\keyword{internal}

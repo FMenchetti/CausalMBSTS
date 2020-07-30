@@ -5,8 +5,9 @@
 #' @param seas.period Length of the seasonal pattern.
 #' @param cycle.period Length of the cycle pattern.
 #'
-#' @return
+#' @return An object of class 'SSModel'.
 #' @export
+#' @keywords internal
 #'
 #' @examples
 #' # Example 1 : local level + seasonal
