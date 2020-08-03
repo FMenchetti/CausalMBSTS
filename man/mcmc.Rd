@@ -18,13 +18,14 @@ mcmc(
 )
 }
 \arguments{
-\item{Smodel}{A multivariate state space model of class 'SSModel'.}
+\item{Smodel}{A multivariate state space model of class \code{SSModel}.}
 
 \item{X}{t x P optional matrix of predictors.}
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
 
-\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
+where d is the number of time series in the multivariate model.}
 
 \item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r.}
 
@@ -34,25 +35,25 @@ mcmc(
 
 \item{niter}{Number of MCMC iteration.}
 
-\item{burn}{Desired burn-in, set by default to 0.1 * niter.}
+\item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.}
+\item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * \code{niter}.}
 }
 \value{
-An object of class 'mbsts' which is a list with the following components
+An object of class 'mbsts' which is a list with the following components:
 \describe{
-  \item{eta.samples}{'niter' draws from the distribution of eta_r.}
-  \item{eps.samples}{'niter' draws from the distribution of eps.}
-  \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-  \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma.r.}
-  \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma.eps.}
-  \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
-  \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
-  \item{X}{Predictor matrix.}
+  \item{eta.samples}{(\code{niter}- \code{burn}) draws from the distribution of eta_r.}
+  \item{eps.samples}{(\code{niter}- \code{burn}) draws from the distribution of eps.}
+  \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
+  \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
+  \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
+  \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
+  \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+  \item{X}{Predictor matrix (if provided).}
   \item{y}{Matrix of observations.}
-  \item{Z}{(1 x m) selection matrix of the observation equation.}
+  \item{Z}{(d x m) selection matrix of the observation equation.}
   \item{T}{(m x m) matrix of the state equation.}
-  \item{R}{(1 x r) matrix selecting the state disturbances.}
+  \item{R}{(m x r) matrix selecting the state disturbances.}
   \item{niter}{Number of mcmc iterations.}
   \item{burn}{Burn-in.}
 }

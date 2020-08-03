@@ -22,31 +22,32 @@
 #' @importFrom CholWishart lmvgamma
 #' @importFrom Matrix bdiag
 #' @importFrom MixMatrix rmatrixnorm
-#' @param Smodel A multivariate state space model of class 'SSModel'.
+#' @param Smodel A multivariate state space model of class \code{SSModel}.
 #' @param X t x P optional matrix of predictors.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
-#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2 where d is the number of time series in the multivariate model.
+#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
+#' where d is the number of time series in the multivariate model.
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r.
 #' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps. Set by default to d + 2.
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
-#' @param burn Desired burn-in, set by default to 0.1 * niter.
-#' @param ping A status message it's printed every 'ping' iteration, defaults to 0.1 * 'niter'.
+#' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
+#' @param ping A status message it's printed every 'ping' iteration, defaults to 0.1 * \code{niter}.
 #'
-#' @return An object of class 'mbsts' which is a list with the following components
+#' @return An object of class 'mbsts' which is a list with the following components:
 #' \describe{
-#'   \item{eta.samples}{'niter' draws from the distribution of eta_r.}
-#'   \item{eps.samples}{'niter' draws from the distribution of eps.}
-#'   \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-#'   \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma.r.}
-#'   \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma.eps.}
-#'   \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
-#'   \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
-#'   \item{X}{Predictor matrix.}
+#'   \item{eta.samples}{(\code{niter}- \code{burn}) draws from the distribution of eta_r.}
+#'   \item{eps.samples}{(\code{niter}- \code{burn}) draws from the distribution of eps.}
+#'   \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
+#'   \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
+#'   \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
+#'   \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
+#'   \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+#'   \item{X}{Predictor matrix (if provided).}
 #'   \item{y}{Matrix of observations.}
-#'   \item{Z}{(1 x m) selection matrix of the observation equation.}
+#'   \item{Z}{(d x m) selection matrix of the observation equation.}
 #'   \item{T}{(m x m) matrix of the state equation.}
-#'   \item{R}{(1 x r) matrix selecting the state disturbances.}
+#'   \item{R}{(m x r) matrix selecting the state disturbances.}
 #'   \item{niter}{Number of mcmc iterations.}
 #'   \item{burn}{Burn-in.}
 #' }
@@ -70,39 +71,7 @@
 mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter,
     burn, ping = NULL) {
 
-    # MCMC to sample from the joint posterior of model parameters in an mbsts model.
     # For now, the case without contemporaneous predictors variables is not allowed
-    #
-    # Args:
-    #   Smodel  : a multivariate state space model of class 'SSModel'
-    #   X       : an optional T x N matrix of predictors
-    #   H       : N x N variance-covariance matrix between regression coefficients.
-    #             The default is Zellner's g-prior, H = (X'X)^(-1)
-    #   nu0.r   : degrees of freedom of the Inverse-Wishart prior for each Sigma_r.
-    #             The default is the smallest integer such that the expectation of eta_r exists,
-    #             that is, nu0.r = p + 2 where p is the number of time series in the
-    #             multivariate model
-    #   nu0.eps : degrees of freedom of the Inverse-Wishart prior for Sigma_eps, the default is p+2.
-    #   s0.r    : Scale matrix of the Inverse-Wishart prior for each Sigma_r.
-    #   s0.eps  : Scale matrix of the Inverse-Wishart prior for Sigma.eps
-    #   niter   : number of MCMC iteration
-    #   burn    : desired burn-in, set by default to 0.1 * niter
-    #   ping    : logical, if TRUE a status message it's printed every iterations decile.
-    #             Defaults to TRUE.
-    #
-    # Value:
-    #   An object of class 'mbsts' which is a list with the following components
-    #
-    #   Smodel      : Resulting 'SSModel' (is it really useful? maybe I can save only the needed matrices, Z,R,T)
-    #   eta.samples : 'niter' draws from the distribution of eta_r
-    #   eps.samples : 'niter' draws from the distribution of eps
-    #   states.samples : draws from p(\alpha_t | Y_{1:T})
-    #   Sigma.r   : 'niter' draws from the posterior distribution of Sigma_r
-    #   sigma.eps   : 'niter' draws from the posterior distribution of Sigma_eps
-    #   Z           : 'niter' x N selection matrix
-    #   beta        : P x d x 'niter' array containing the draws from the posterior distribution
-    #                 of the regression coefficient matrix, p(beta | Sigma_eps, z)
-    #   ...         : maybe not needed
 
     ### Dimensionalities & other inputs
     d <- dim(y)[2]  # number of time series

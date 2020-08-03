@@ -2,7 +2,7 @@
 % Please edit documentation in R/as_mbsts.R
 \name{as.mbsts}
 \alias{as.mbsts}
-\title{Multivariate structural time series model definition and estimation}
+\title{Define and estimate a Multivariate Bayesian Structural Time Series model (MBSTS)}
 \usage{
 as.mbsts(
   y,
@@ -23,13 +23,14 @@ as.mbsts(
 \arguments{
 \item{y}{t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.}
 
-\item{components}{Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").}
+\item{components}{Character vector specifying the components of the multivariate structural time series model.
+Possible values are c("trend", "slope", "seasonal", "cycle").}
 
-\item{seas.period}{Length of the seasonal pattern.}
+\item{seas.period}{Length of the seasonal pattern, if present.}
 
-\item{cycle.period}{Length of the cycle pattern.}
+\item{cycle.period}{Length of the cycle pattern, if present.}
 
-\item{X}{Optional t x N data frame (or matrix) of predictors.}
+\item{X}{Optional t x N data frame (or matrix) of N predictors.}
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).}
 
@@ -47,41 +48,44 @@ Must be a (d x d) positive definite. Default set to ???.}
 
 \item{niter}{Number of MCMC iterations.}
 
-\item{burn}{Desired burn-in, set by default to 0.1 * niter.}
+\item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message is printed every 'ping' iteration. Default set to 0.1 * 'niter'.}
+\item{ping}{A status message is printed every 'ping' iteration. Default set to 0.1 * \code{niter}.}
 }
 \value{
-An object of class 'mbsts' which is a list with the following components
+An object of class 'mbsts' which is a list with the following components:
 \describe{
-  \item{eta.samples}{'niter' draws from the distribution of eta_r.}
-  \item{eps.samples}{'niter' draws from the distribution of eps.}
-  \item{states.samples}{draws from p(alpha_t | Y_{1:T}).}
-  \item{Sigma.r}{'niter' draws from the posterior distribution of Sigma.r.}
-  \item{sigma.eps}{'niter' draws from the posterior distribution of Sigma.eps.}
-  \item{Z.beta}{('niter'- 'burn') x P matrix of the models selected at each iteration.}
-  \item{beta}{ P x d x ('niter' - 'burn') ) array of the draws from the posterior distribution of the regression coefficient matrix.}
-  \item{X}{Predictor matrix.}
+  \item{eta.samples}{(\code{niter}- \code{burn}) draws from the distribution of eta_r.}
+  \item{eps.samples}{(\code{niter}- \code{burn}) draws from the distribution of eps.}
+  \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
+  \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
+  \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
+  \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
+  \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+  \item{X}{Predictor matrix (if provided).}
   \item{y}{Matrix of observations.}
-  \item{Z}{(1 x m) selection matrix of the observation equation.}
+  \item{Z}{(d x m) selection matrix of the observation equation.}
   \item{T}{(m x m) matrix of the state equation.}
-  \item{R}{(1 x r) matrix selecting the state disturbances.}
+  \item{R}{(m x r) matrix selecting the state disturbances.}
   \item{niter}{Number of mcmc iterations.}
   \item{burn}{Burn-in.}
   }
 }
 \description{
-Multivariate structural time series model definition and estimation
+The function creates a multivariate bayesian structural time series model. It then estimates the model, samples from the joint posterior
+distribution of its parameters, and outputs an object of class \code{mbsts}.
 }
 \examples{
 ## Example 1 : local level + seasonal (d = 3)
 y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
-mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7,
+                    s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 
 ## Example 2 : local level + seasonal + covariates (d = 2)
 y <- cbind(rnorm(100), rnorm(100, 2, 3))
 X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), , seas.period = 7, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), , seas.period = 7,
+                    X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 }

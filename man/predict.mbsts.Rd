@@ -9,7 +9,8 @@
 \arguments{
 \item{object}{An object of class 'mbsts'.}
 
-\item{steps.ahead}{An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.}
+\item{steps.ahead}{An integer value (S) specifying the number of steps ahead to be forecasted.
+If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.}
 
 \item{newdata}{Optional matrix of new data. Only required when 'mbsts' contains a regression component.}
 
@@ -18,9 +19,9 @@
 \value{
 Returns a list with the following components
 \describe{
-  \item{post.pred.0}{t x d x 'niter' array of in-sample forecasts.}
-  \item{post.pred.1}{S x d x 'niter' array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
-  \item{post.pred}{(t + S) x d x 'niter' array combining in- and out-of-sample forecasts.}
+  \item{post.pred.0}{t x d x ('niter'- 'burn') array of in-sample forecasts.}
+  \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
+  \item{post.pred}{(t + S) x d x ('niter'- 'burn') array combining in- and out-of-sample forecasts.}
 }
 }
 \description{

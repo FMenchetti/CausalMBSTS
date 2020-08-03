@@ -27,24 +27,25 @@ CausalMBSTS(
 \arguments{
 \item{y}{t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.}
 
-\item{components}{Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").}
+\item{components}{Character vector specifying the components of the multivariate structural time series model.
+Possible values are c("trend", "slope", "seasonal", "cycle").}
 
-\item{seas.period}{Length of the seasonal pattern.}
+\item{seas.period}{Length of the seasonal pattern, if present.}
 
-\item{cycle.period}{Length of the cycle pattern.}
+\item{cycle.period}{Length of the cycle pattern, if present.}
 
-\item{X}{Optional t x N data frame (or matrix) of predictors.}
+\item{X}{Optional t x N data frame (or matrix) of N predictors.}
 
-\item{dates}{a vector of dates of length t (with elements of class "Date") that correspond to observations in y.}
+\item{dates}{a vector of dates of length t (with elements of class \code{Date}) that correspond to observations in y.}
 
-\item{int.date}{Date of the intervention (must be of class Date).}
+\item{int.date}{Date of the intervention (must be of class \code{Date}).}
 
 \item{excl.dates}{Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
-computation of the causal effect. The elements of the vector must be either 0
-(the corresponding date is retained) or 1 (the corresponding date is excluded).}
+computation of the causal effect. The elements of the vector must be either 0 (the corresponding date is retained) or
+1 (the corresponding date is excluded). The first part that corresponds to  \code{dates < int.date} is ignored.}
 
-\item{horizon}{Optional, vector of dates (with elements of class "Date"). If provided, a causal effect
-is computed for the time horizon(s) between int.date and each specified date. Defaults to the date of the last observation.}
+\item{horizon}{Optional, vector of dates (with elements of class  \code{Date}). If provided, a causal effect
+is computed for the time horizon(s) between \code{int.date} and each specified date. Defaults to the date of the last observation.}
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).}
 
@@ -62,16 +63,16 @@ Must be a (d x d) positive definite. Default set to ???.}
 
 \item{niter}{Number of MCMC iterations.}
 
-\item{burn}{Desired burn-in, set by default to 0.1 * niter.}
+\item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message is printed every 'ping' iteration. Default set to 0.1 * 'niter'.}
+\item{ping}{A status message is printed every \code{ping} iteration. Default set to 0.1 * \code{niter}.}
 }
 \value{
 A list with the following components:
-  \item{mcmc}{An object of class 'mbsts'.}
+  \item{mcmc}{An object of class \code{mbsts}.}
   \item{predict}{A list with the same components as those produced by the function \code{\link{predict.mbsts}}}
-  \item{y}{Observations in the analysis period (excluding 'excl.dates' if provided).}
-  \item{dates}{Dates in the analysis period (excluding 'excl.dates' if provided).}
+  \item{y}{Observations in the analysis period (excluding \code{excl.dates} if provided).}
+  \item{dates}{Dates in the analysis period (excluding \code{excl.dates} if provided).}
   \item{general}{General causal effect for all iterations.}
   \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
   \item{mean.general}{Pointwise effect.}

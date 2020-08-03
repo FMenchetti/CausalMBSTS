@@ -12,8 +12,6 @@
 ######################################################################################
 ######################################################################################
 
-
-
 #' Prediction for a given multivariate Bayesian structural time series model
 #'
 #' Given an object of class 'mbsts' and the number of 'steps.ahead' in the future to be
@@ -24,15 +22,16 @@
 #'
 #' @importFrom MASS mvrnorm
 #' @param object An object of class 'mbsts'.
-#' @param steps.ahead An integer value specifying the number of steps ahead to be forecasted. If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
+#' @param steps.ahead An integer value (S) specifying the number of steps ahead to be forecasted.
+#' If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
 #' @param newdata Optional matrix of new data. Only required when 'mbsts' contains a regression component.
 #' @param ... Arguments passed to other methods (currently unused).
 #'
 #' @return Returns a list with the following components
 #' \describe{
-#'   \item{post.pred.0}{t x d x 'niter' array of in-sample forecasts.}
-#'   \item{post.pred.1}{S x d x 'niter' array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
-#'   \item{post.pred}{(t + S) x d x 'niter' array combining in- and out-of-sample forecasts.}
+#'   \item{post.pred.0}{t x d x ('niter'- 'burn') array of in-sample forecasts.}
+#'   \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
+#'   \item{post.pred}{(t + S) x d x ('niter'- 'burn') array combining in- and out-of-sample forecasts.}
 #' }
 #' @export
 #'

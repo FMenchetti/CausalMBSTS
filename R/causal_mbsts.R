@@ -27,17 +27,18 @@
 #' computed accordingly).
 #'
 #' @param y t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.
-#' @param components Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").
-#' @param seas.period Length of the seasonal pattern.
-#' @param cycle.period Length of the cycle pattern.
-#' @param X Optional t x N data frame (or matrix) of predictors.
-#' @param dates a vector of dates of length t (with elements of class "Date") that correspond to observations in y.
-#' @param int.date Date of the intervention (must be of class Date).
+#' @param components Character vector specifying the components of the multivariate structural time series model.
+#' Possible values are c("trend", "slope", "seasonal", "cycle").
+#' @param seas.period Length of the seasonal pattern, if present.
+#' @param cycle.period Length of the cycle pattern, if present.
+#' @param X Optional t x N data frame (or matrix) of N predictors.
+#' @param dates a vector of dates of length t (with elements of class \code{Date}) that correspond to observations in y.
+#' @param int.date Date of the intervention (must be of class \code{Date}).
 #' @param excl.dates Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
-#' computation of the causal effect. The elements of the vector must be either 0
-#' (the corresponding date is retained) or 1 (the corresponding date is excluded).
-#' @param horizon Optional, vector of dates (with elements of class "Date"). If provided, a causal effect
-#' is computed for the time horizon(s) between int.date and each specified date. Defaults to the date of the last observation.
+#' computation of the causal effect. The elements of the vector must be either 0 (the corresponding date is retained) or
+#' 1 (the corresponding date is excluded). The first part that corresponds to  \code{dates < int.date} is ignored.
+#' @param horizon Optional, vector of dates (with elements of class  \code{Date}). If provided, a causal effect
+#' is computed for the time horizon(s) between \code{int.date} and each specified date. Defaults to the date of the last observation.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
 #' Set by default to d + 2 (must be greater than d - 1).
@@ -48,16 +49,16 @@
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
 #' Must be a (d x d) positive definite. Default set to ???.
 #' @param niter Number of MCMC iterations.
-#' @param burn Desired burn-in, set by default to 0.1 * niter.
-#' @param ping A status message is printed every 'ping' iteration. Default set to 0.1 * 'niter'.
+#' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
+#' @param ping A status message is printed every \code{ping} iteration. Default set to 0.1 * \code{niter}.
 #'
 #' @details {PERHAPS ADD MORE DETAILS OF THE PROCEDURE HERE}
 #'
 #' @return A list with the following components:
-#'   \item{mcmc}{An object of class 'mbsts'.}
+#'   \item{mcmc}{An object of class \code{mbsts}.}
 #'   \item{predict}{A list with the same components as those produced by the function \code{\link{predict.mbsts}}}
-#'   \item{y}{Observations in the analysis period (excluding 'excl.dates' if provided).}
-#'   \item{dates}{Dates in the analysis period (excluding 'excl.dates' if provided).}
+#'   \item{y}{Observations in the analysis period (excluding \code{excl.dates} if provided).}
+#'   \item{dates}{Dates in the analysis period (excluding \code{excl.dates} if provided).}
 #'   \item{general}{General causal effect for all iterations.}
 #'   \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
 #'   \item{mean.general}{Pointwise effect.}
