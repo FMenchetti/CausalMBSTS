@@ -75,7 +75,10 @@
 #'            seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
 #' dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 400)
 #'
-#' # Adding a fictional intervention and four covariates (they should be related to the outcome but unaffected by the intervention). To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
+#' # Adding a fictional intervention and four covariates (they should be related
+#' # to the outcome but unaffected by the intervention). To illustrate the
+#' # functioning of Bayesian model selection, one covariate is assumed to be
+#' # unrelated to y.
 #' int.date <- as.Date('2019-11-05')
 #' y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
 #' x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
@@ -96,7 +99,9 @@
 #'   }
 #'
 #' # Causal effect estimation
-#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7, X = X,
+#'                         dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3),
+#'                         niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
 #' causal.1$general.effect
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -113,13 +118,45 @@
 #' abline(v=int.date, col="red")
 #'
 #' # Causal effect estimation
-#' causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+#' causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75,
+#'                         dates = dates, int.date = int.date, s0.r = 0.01*diag(2),
+#'                         s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 #' causal.2$general.effect
 
 
 
-CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL, H = NULL,
-    nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter, burn = NULL, ping = NULL) {
+CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
+                        X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL,
+                        H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter,
+                        burn = NULL, ping = NULL) {
+
+    ### Parameter checks
+    if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+    if(!components %in% c("trend", "slope", "seasonal", "cycle"))
+        stop("`components` must be one of 'trend', 'slop', 'seasonal', or 'cycle'")
+    if(!missing(seas.period) && (!is.numeric(seas.period) ||length(seas.period) != 1))
+        stop("`seas.period` must be a numeric vector of length one")
+    if(!missing(cycle.period) && (!is.numeric(cycle.period) ||length(cycle.period) != 1))
+        stop("`cycle.period` must be a numeric vector of length one")
+    if(!missing(X)) {
+        if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+        if(nrow(X) != nrow (y)) stop("nrow(X) != nrow(X)")
+    }
+    if(!any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
+        stop("`dates` must be a vector of class Date")
+    if(!length(dates) != nrow(y)) stop("length(dates) != nrow(y)")
+    if(!length(int.date) != 1 && any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
+        stop("`int.date` must be a Date of length 1")
+    if(!missing(excl.dates)) {
+        if(any(!as.integer(excl.dates) %in% c(0L, 1L))) stop("`excl.dates` must be 0/1 or TRUE/FALSE")
+        if(length(excl.dates) != nrow(y)) stop("length(`excl.dates`) != nrow(`y`)")
+    }
+    if(!missing(horizon) && !any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
+        stop("`horizon` must be a Date object")
+    
+
+        
+    
 
     ### STEP 1. Dividing pre and post periods
     ind <- dates < int.date

@@ -55,8 +55,30 @@
 #' mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), , seas.period = 7,
 #'                     X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
-as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps = NULL, niter, burn, ping = NULL){
+as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL,
+                     H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps = NULL, niter,
+                     burn, ping = NULL){
 
+  ## Parameter checks
+  if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+  if(!components %in% c("trend", "slope", "seasonal", "cycle"))
+    stop("`components` must be one of 'trend', 'slop', 'seasonal', or 'cycle'")
+  if(!missing(seas.period) && (!is.numeric(seas.period) ||length(seas.period) != 1))
+    stop("`seas.period` must be a numeric vector of length one")
+  if(!missing(cycle.period) && (!is.numeric(cycle.period) ||length(cycle.period) != 1))
+    stop("`cycle.period` must be a numeric vector of length one")
+  if(!missing(X)) {
+    if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+    if(nrow(X) != nrow (y)) stop("nrow(X) != nrow(X)")
+  }
+  if(!missing(s0.r) && (!is.matrix(s0.r) || !all(dim(s0.r) == ncol(y))))
+    stop("`s0.r` must be a d x d matrix")
+  if(!missing(nu0.eps)  && (!is.numeric(nu0.eps) || length(nu0.eps) != 1 || nu0.eps <= nrow(y)))
+    stop("`nu0.eps` must be a length-one numeric vector value >= to d")
+  if(!missing(s0.eps) && (!is.matrix(s0.eps) || !all(dim(s0.r) == ncol(y))))
+    stop("`s0.eps` must be a d x d matrix")
+  if(!missing(niter) && !is.numeric(niter)) stop("`niter` must be a length-one numeric vector")
+  if(!missing(ping) && !is.numeric(ping)) stop("`ping` must be a length-one numeric vector")
   # Model definition
   Smodel <- model(y = y, components = components, seas.period = seas.period, cycle.period = cycle.period)
 
