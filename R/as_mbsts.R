@@ -60,15 +60,15 @@ as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X =
                      burn, ping = NULL){
 
   ## Parameter checks
-  if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
-  if(!components %in% c("trend", "slope", "seasonal", "cycle"))
+  if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+  if(all(!components %in% c("trend", "slope", "seasonal", "cycle")))
     stop("`components` must be one of 'trend', 'slop', 'seasonal', or 'cycle'")
   if(!missing(seas.period) && (!is.numeric(seas.period) ||length(seas.period) != 1))
     stop("`seas.period` must be a numeric vector of length one")
   if(!missing(cycle.period) && (!is.numeric(cycle.period) ||length(cycle.period) != 1))
     stop("`cycle.period` must be a numeric vector of length one")
   if(!missing(X)) {
-    if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+    if(!is.matrix(X) && !is.data.frame(X)) stop("`X` must be a matrix or data.frame")
     if(nrow(X) != nrow (y)) stop("nrow(X) != nrow(X)")
   }
   if(!missing(s0.r) && (!is.matrix(s0.r) || !all(dim(s0.r) == ncol(y))))

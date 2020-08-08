@@ -131,21 +131,21 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
                         burn = NULL, ping = NULL) {
 
     ### Parameter checks
-    if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
-    if(!components %in% c("trend", "slope", "seasonal", "cycle"))
+    if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+    if(!all(components %in% c("trend", "slope", "seasonal", "cycle")))
         stop("`components` must be one of 'trend', 'slop', 'seasonal', or 'cycle'")
     if(!missing(seas.period) && (!is.numeric(seas.period) ||length(seas.period) != 1))
         stop("`seas.period` must be a numeric vector of length one")
     if(!missing(cycle.period) && (!is.numeric(cycle.period) ||length(cycle.period) != 1))
         stop("`cycle.period` must be a numeric vector of length one")
     if(!missing(X)) {
-        if(!is.matrix(y) || !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+        if(!is.matrix(X) && !is.data.frame(X)) stop("`X` must be a matrix or data.frame")
         if(nrow(X) != nrow (y)) stop("nrow(X) != nrow(X)")
     }
     if(!any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
         stop("`dates` must be a vector of class Date")
-    if(!length(dates) != nrow(y)) stop("length(dates) != nrow(y)")
-    if(!length(int.date) != 1 && any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
+    if(length(dates) != nrow(y)) stop("length(dates) != nrow(y)")
+    if(length(int.date) != 1 || !any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
         stop("`int.date` must be a Date of length 1")
     if(!missing(excl.dates)) {
         if(any(!as.integer(excl.dates) %in% c(0L, 1L))) stop("`excl.dates` must be 0/1 or TRUE/FALSE")
@@ -166,10 +166,13 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
     y.pre <- y[ind, ]
     y.post <- y[!ind, ]
 
-    ### STEP 2. MCMC
-    mbsts <- as.mbsts(y = y.pre, components = components, seas.period = seas.period, cycle.period = cycle.period,
-                      X = X.pre, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
-                      s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
+### STEP 2. MCMC
+    mbsts_args <- list(y = y.pre, components = components, seas.period = seas.period,
+                       cycle.period = cycle.period, X = X.pre, H = H, nu0.r = nu0.r,
+                       s0.r = s0.r, nu0.eps = nu0.eps, s0.eps = s0.eps, niter = niter,
+                       burn = burn, ping = ping)
+    mbsts_args <- mbsts_args[sapply(mbsts_args, function(x) !is.na(x) && !is.null(x))]
+    mbsts <- do.call(as.mbsts, mbsts_args)
 
     ### STEP 3. In- and out-of-sample forecasts from the PPD
     predict <- predict(mbsts, steps.ahead = dim(y[!ind,])[1], X.post)
