@@ -39,15 +39,15 @@
 #' 1 (the corresponding date is excluded). The first part that corresponds to  \code{dates < int.date} is ignored.
 #' @param horizon Optional, vector of dates (with elements of class  \code{Date}). If provided, a causal effect
 #' is computed for the time horizon(s) between \code{int.date} and each specified date. Defaults to the date of the last observation.
-#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
 #' Set by default to d + 2 (must be greater than d - 1).
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector of errors for state r. Must be a (d x d)
-#' positive definite. Default set to ???.
+#' positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.
 #' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time
 #' series. Set by default to d + 2 (must be greater than d - 1).
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
-#' Must be a (d x d) positive definite. Default set to ???.
+#' Must be a (d x d) positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.
 #' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
 #' @param ping A status message is printed every \code{ping} iteration. Default set to 0.1 * \code{niter}.
@@ -153,10 +153,11 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
     }
     if(!missing(horizon) && !any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
         stop("`horizon` must be a Date object")
-    
+    if(missing(s0.r)){s0.r <- NULL}
+    if(missing(s0.eps)){s0.eps <- NULL}
 
-        
-    
+
+
 
     ### STEP 1. Dividing pre and post periods
     ind <- dates < int.date

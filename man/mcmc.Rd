@@ -22,7 +22,7 @@ mcmc(
 
 \item{X}{t x P optional matrix of predictors.}
 
-\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).}
+\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].}
 
 \item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
 where d is the number of time series in the multivariate model.}

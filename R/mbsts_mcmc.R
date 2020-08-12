@@ -24,7 +24,7 @@
 #' @importFrom MixMatrix rmatrixnorm
 #' @param Smodel A multivariate state space model of class \code{SSModel}.
 #' @param X t x P optional matrix of predictors.
-#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = (X'X)^(-1).
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
 #' where d is the number of time series in the multivariate model.
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r.
@@ -68,13 +68,17 @@
 #' model.2 <- model(y = y, components = c("trend", "seasonal"), seas.period = 7)
 #' mcmc.2 <- mcmc(model.2, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
-mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter,
+mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL, s0.eps , niter,
     burn, ping = NULL) {
-
-    # For now, the case without contemporaneous predictors variables is not allowed
 
     ### Dimensionalities & other inputs
     d <- dim(y)[2]  # number of time series
+    y <- Smodel$y
+    t <- dim(y)[1]  # number of time points
+    rr <- dim(Smodel$R)[2]  # tot number of state disturbances
+    r <- rr/d  # number of state disturbances for each time series
+    M <- dim(Smodel$T)[1]  # tot number of states
+    m <- M/d  # number of states for each time series
 
     # set default H (Zellner's g-prior)
     if (!is.null(X) & is.null(H)) {
@@ -100,22 +104,14 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL,
     Smodel$H[, , 1] <- rInvWishart(1, df = nu0.eps, Sigma = s0.eps)[, , 1]
     Smodel$Q[, , 1] <- stateVarianceDef(Smodel, nu = nu0.r , s = s0.r)
 
-    # get dim
-    y <- Smodel$y
-    t <- dim(y)[1]  # number of time points
-    rr <- dim(Smodel$R)[2]  # tot number of state disturbances
-    r <- rr/d  # number of state disturbances for each time series
-    M <- dim(Smodel$T)[1]  # tot number of states
-    m <- M/d  # number of states for each time series
-
     ### Empty arrays to store MCMC iterations
     eta.samples <- array(NA, c(nrow(y), rr, niter - burn))
-    eta.names <- etaNamesDef(Smodel) # that's really ugly...is it possible to find an alternative to degree.1 and degree.2?
+    eta.names <- etaNamesDef(Smodel)
     #eta.names <- unique(c(t(outer(attr(Smodel, "eta_types"), attr(Smodel$y, "dimnames")[[2]], paste))))
     colnames(eta.samples) <- eta.names
 
     Sigma.states <- array(NA, c(rr, rr, niter - burn))
-    colnames(Sigma.states) <- attr(Smodel, "eta_types") # eta.names it's maybe better
+    colnames(Sigma.states) <- attr(Smodel, "eta_types")
     rownames(Sigma.states) <- attr(Smodel, "eta_types")
 
     eps.samples <- array(NA, c(nrow(y), d, niter - burn))

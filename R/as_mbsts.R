@@ -1,6 +1,6 @@
 #' Define and estimate a Multivariate Bayesian Structural Time Series model (MBSTS)
 #'
-#' The function creates a multivariate bayesian structural time series model. It then estimates the model, samples from the joint posterior
+#' The function creates a multivariate Bayesian structural time series model. It then estimates the model, samples from the joint posterior
 #' distribution of its parameters, and outputs an object of class \code{mbsts}.
 #'
 #' @param y t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.
@@ -9,15 +9,15 @@
 #' @param seas.period Length of the seasonal pattern, if present.
 #' @param cycle.period Length of the cycle pattern, if present.
 #' @param X Optional t x N data frame (or matrix) of N predictors.
-#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to Zellner's g-prior, H = (X'X)^(-1).
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
 #' Set by default to d + 2 (must be greater than d - 1).
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector of errors for state r. Must be a (d x d)
-#' positive definite. Default set to ???.
+#' positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.
 #' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time
 #' series. Set by default to d + 2 (must be greater than d - 1).
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
-#' Must be a (d x d) positive definite. Default set to ???.
+#' Must be a (d x d) positive definite. Default set to Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01..
 #' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
 #' @param ping A status message is printed every 'ping' iteration. Default set to 0.1 * \code{niter}.
@@ -56,7 +56,7 @@
 #'                     X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
 as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL,
-                     H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps = NULL, niter,
+                     H = NULL, nu0.r = NULL, s0.r = 0.01 * var(y, na.rm = T), nu0.eps = NULL, s0.eps = 0.01 * var(y, na.rm = T), niter,
                      burn, ping = NULL){
 
   ## Parameter checks
