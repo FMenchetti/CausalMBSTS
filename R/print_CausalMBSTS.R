@@ -58,7 +58,7 @@ print.CausalMBSTS <- function(x){
       # saving output
       summary_impact[[i]] <- list(impact, prob_causal_eff)
       names(summary_impact[[i]]) <- c("Effect", "P-value")
-      }
+    }
 
     names(summary_impact) <- paste("horizon",1:length(effect))
 

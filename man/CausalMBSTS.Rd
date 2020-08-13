@@ -12,6 +12,7 @@ CausalMBSTS(
   X = NULL,
   dates,
   int.date,
+  alpha = 0.05,
   excl.dates = NULL,
   horizon = NULL,
   H = NULL,
@@ -39,6 +40,8 @@ Possible values are c("trend", "slope", "seasonal", "cycle").}
 \item{dates}{a vector of dates of length t (with elements of class \code{Date}) that correspond to observations in y.}
 
 \item{int.date}{Date of the intervention (must be of class \code{Date}).}
+
+\item{alpha}{Level of credible interval to report for the estimated causal effect. Default set to 0.05 (i.e., reporting a two-sided 95\% credible interval).}
 
 \item{excl.dates}{Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
 computation of the causal effect. The elements of the vector must be either 0 (the corresponding date is retained) or
