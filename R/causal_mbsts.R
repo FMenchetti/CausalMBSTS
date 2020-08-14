@@ -34,6 +34,7 @@
 #' @param X Optional t x N data frame (or matrix) of N predictors.
 #' @param dates a vector of dates of length t (with elements of class \code{Date}) that correspond to observations in y.
 #' @param int.date Date of the intervention (must be of class \code{Date}).
+#' @param alpha Level of credible interval to report for the estimated causal effect. Default set to 0.05 (i.e., reporting a two-sided 95\% credible interval).
 #' @param excl.dates Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
 #' computation of the causal effect. The elements of the vector must be either 0 (the corresponding date is retained) or
 #' 1 (the corresponding date is excluded). The first part that corresponds to  \code{dates < int.date} is ignored.
@@ -126,9 +127,9 @@
 
 
 CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
-                        X = NULL, dates, int.date, excl.dates = NULL, horizon = NULL,
-                        H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL, s0.eps, niter,
-                        burn = NULL, ping = NULL) {
+                        X = NULL, dates, int.date, alpha = 0.05, excl.dates = NULL,
+                        horizon = NULL, H = NULL, nu0.r = NULL, s0.r, nu0.eps = NULL,
+                        s0.eps, niter, burn = NULL, ping = NULL) {
 
     ### Parameter checks
     if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
@@ -200,31 +201,31 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
         for (i in 1:length(horizon)) {
             ind <- dates[dates >= int.date] <= horizon[i]
             mean.effect[[i]] <- apply(y.diff[ind, , ], c(1, 2), mean)
-            lower.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.025)
-            upper.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 0.975)
+            lower.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = alpha/2)
+            upper.bound[[i]] <- apply(y.diff[ind, , ], c(1, 2), quantile, probs = 1-alpha/2)
             joint.effect[[i]] <- cbind(mean = apply(colMeans(y.diff[ind, , ]), 1, mean),
-                                       lower = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = 0.025),
-                                       upper = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = 0.975),
+                                       lower = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = alpha/2),
+                                       upper = apply(colMeans(y.diff[ind, , ]), 1, quantile, probs = 1-alpha/2),
                                        cum.sum = apply(colSums(y.diff[ind, , ]), 1, mean),
-                                       cum.lower = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.025),
-                                       cum.upper = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 0.975))
+                                       cum.lower = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = alpha/2),
+                                       cum.upper = apply(colSums(y.diff[ind, , ]), 1, quantile, probs = 1-alpha/2))
         }
     } else {
         mean.effect <- apply(y.diff, c(1, 2), mean)
-        lower.bound <- apply(y.diff, c(1, 2), quantile, probs = 0.025)
-        upper.bound <- apply(y.diff, c(1, 2), quantile, probs = 0.975)
+        lower.bound <- apply(y.diff, c(1, 2), quantile, probs = alpha/2)
+        upper.bound <- apply(y.diff, c(1, 2), quantile, probs = 1-alpha/2)
         joint.effect <- cbind(mean = apply(colMeans(y.diff), 1, mean),
-                              lower = apply(colMeans(y.diff), 1, quantile, probs = 0.025),
-                              upper = apply(colMeans(y.diff), 1, quantile, probs = 0.975),
+                              lower = apply(colMeans(y.diff), 1, quantile, probs = alpha/2),
+                              upper = apply(colMeans(y.diff), 1, quantile, probs = 1-alpha/2),
                               cum.sum = apply(colSums(y.diff), 1, mean),
-                              cum.lower = apply(colSums(y.diff), 1, quantile, probs = 0.025),
-                              cum.upper = apply(colSums(y.diff), 1, quantile, probs = 0.975))
+                              cum.lower = apply(colSums(y.diff), 1, quantile, probs = alpha/2),
+                              cum.upper = apply(colSums(y.diff), 1, quantile, probs = 1-alpha/2))
     }
 
-    list <- list(mcmc = mbsts, predict = predict, y = y, dates = dates, general = y.diff, general.effect = joint.effect,
+    list_res <- list(mcmc = mbsts, predict = predict, y = y, dates = dates, general = y.diff, general.effect = joint.effect,
         mean.general = mean.effect, lower.general = lower.bound, upper.general = upper.bound)
-    class(list) <- "CausalMBSTS"
-    return(list)
+    class(list_res) <- "CausalMBSTS"
+    return(list_res)
 }
 
 #--------------------------------------------------------------------------------------
