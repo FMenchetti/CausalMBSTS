@@ -1,18 +1,25 @@
 
 #' Plotting function for object of class CausalMBSTS
 #'
-#' Given an object of class 'CausalMBSTS', the function draws: i) the plot of the estimated (pointwise) causal impact; ii) the original time series plotted against the predicted counterfactual; iii) posterior predictive checks; iv) regressor inclusion probabilities (only for models with a regression component).
+#' Given an object of class 'CausalMBSTS', the function draws: i) the plot of
+#' the estimated (pointwise) causal impact; ii) the original time series plotted
+#' against the predicted counterfactual; iii) posterior predictive checks; iv)
+#' regressor inclusion probabilities (only for models with a regression
+#' component).
 #'
-#' 'impact' plots the general causal effect at every time points in the post period.
-#' 'forecast' plots the observed time series against the predicted counterfactual.
-#' 'ppchecks' draws posterior predictive checks for the model estimated in the pre period.
-#' 'inclusion.probs' plots the regressors inclusion probabilities.
+#' 'impact' plots the general causal effect at every time points in the post
+#' period. 'forecast' plots the observed time series against the predicted
+#' counterfactual. 'ppchecks' draws posterior predictive checks for the model
+#' estimated in the pre period. 'inclusion.probs' plots the regressors inclusion
+#' probabilities.
 #'
 #' @importFrom forecast Acf
 #' @param x Object of class 'CausalMBSTS'
 #' @param int.date Date of the intervention.
-#' @param type A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
-#' @param  prob Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.
+#' @param type A character string indicating the type of plot to be produced.
+#'   Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
+#' @param prob Regressors inclusion probabilities above 'prob' are plotted.
+#'   Optional, only required for type = 'inclusion.prob'.
 #' @param ... Arguments passed to other methods (currently unused).
 #'
 #' @return NULL, invisibly.
@@ -26,7 +33,9 @@
 #'            seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
 #' dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 400)
 #'
-#' # Adding a fictional intervention and four covariates. To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
+#' # Adding a fictional intervention and four covariates. To illustrate the
+#' # functioning of Bayesian model selection, one covariate is assumed to be
+#' # unrelated to y.
 #' int.date <- as.Date('2019-11-05')
 #' y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
 #' x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
@@ -37,7 +46,9 @@
 #'
 #' # Model definition
 #' model.1 <- model(y.new, components = c("trend", "seasonal"), seas.period = 7)
-#' causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20, burn = 5, horizon = c('2019-12-05','2020-02-13'))
+#' causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date,
+#'                          s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20,
+#'                          burn = 5, horizon = c('2019-12-05','2020-02-13'))
 #'
 #' ## Plotting
 #' plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
@@ -58,7 +69,9 @@
 #'
 #' # Model definition
 #' model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
-#' causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+#' causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date,
+#'                          s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2),
+#'                          niter = 100, burn = 10)
 #'
 #' # Plotting
 #' par(mfrow=c(2,4))
