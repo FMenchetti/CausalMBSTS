@@ -24,15 +24,22 @@
 #' @importFrom MixMatrix rmatrixnorm
 #' @param Smodel A multivariate state space model of class \code{SSModel}.
 #' @param X t x P optional matrix of predictors.
-#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].
-#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
-#' where d is the number of time series in the multivariate model.
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set
+#'   by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The
+#'   value of the scaling factor is set to \code{c = 1}. Alternative priors
+#'   could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995
+#'   that suggest setting \code{c} in the range [10,1000].
+#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each
+#'   Sigma.r. Set by default to n0.r = d + 2, where d is the number of time
+#'   series in the multivariate model.
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r.
-#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps. Set by default to d + 2.
+#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps.
+#'   Set by default to d + 2.
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
-#' @param ping A status message it's printed every 'ping' iteration, defaults to 0.1 * \code{niter}.
+#' @param ping A status message it's printed every 'ping' iteration, defaults to
+#'   0.1 * \code{niter}.
 #'
 #' @return An object of class 'mbsts' which is a list with the following components:
 #' \describe{
@@ -41,8 +48,10 @@
 #'   \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
 #'   \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
 #'   \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
-#'   \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
-#'   \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+#'   \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration
+#'                 (if a matrix of predictors is provided).}
+#'   \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior
+#'                distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
 #'   \item{X}{Predictor matrix (if provided).}
 #'   \item{y}{Matrix of observations.}
 #'   \item{Z}{(d x m) selection matrix of the observation equation.}
@@ -87,11 +96,12 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
     }
 
     # set default ping
-    if (is.null(ping)) {
+    if (missing(ping)) {
         ping <- 0.1 * niter
     }
-    sequence <- seq(ping, niter, by = ping)
-
+    sequence = vector(mode = "integer")
+    if(!is.null(ping) && ping > 0) sequence <- seq(ping, niter, by = ping)
+    
     # set default nu0.r and nu0.eps
     if (is.null(nu0.r)) {
         nu0.r <- d + 2
@@ -131,7 +141,7 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
 
         # Monitoring status
         if (i %in% sequence) {
-            print(i)
+            message(i)
         }
 
         ### STEP 1: Durbin & Koopman simulation smoother from KFAS package

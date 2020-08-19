@@ -1,7 +1,9 @@
 #' Multivariate structural time series model definition
 #'
 #' @param y t x d matrix or data.frame of observations.
-#' @param components Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").
+#' @param components Character vector specifying the components of the
+#'   multivariate structural time series model. Possible values in c("trend",
+#'   "slope", "seasonal", "cycle").
 #' @param seas.period Length of the seasonal pattern.
 #' @param cycle.period Length of the cycle pattern.
 #'
