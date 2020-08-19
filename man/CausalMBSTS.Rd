@@ -77,10 +77,10 @@ A list with the following components:
   \item{y}{Observations in the analysis period (excluding \code{excl.dates} if provided).}
   \item{dates}{Dates in the analysis period (excluding \code{excl.dates} if provided).}
   \item{general}{General causal effect for all iterations.}
-  \item{general.effect}{Estimated average causal effect and a 95\% credible interval.}
-  \item{mean.general}{Pointwise effect.}
-  \item{lower.general}{Lower bound of the pointwise effect.}
-  \item{upper.general}{Upper bound of the pointwise effect.}
+  \item{general.effect}{Estimated average causal effect and a (1-\code{alpha})\% credible interval. Returns a list if \code{horizon} is specified.}
+  \item{mean.general}{Pointwise effect. Returns a list if \code{horizon} is specified.}
+  \item{lower.general}{Lower bound of a (1-\code{alpha})\% credible interval of the pointwise effect. Returns a list if \code{horizon} is specified.}
+  \item{upper.general}{Upper bound of a (1-\code{alpha})\% credible interval of the pointwise effect. Returns a list if \code{horizon} is specified.}
 }
 \description{
 The function estimates the general effect of an intervention in a multivariate time series
