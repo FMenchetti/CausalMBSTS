@@ -45,10 +45,10 @@
 #' X <- cbind(x1, x2, x3, x4)
 #'
 #' # Model definition
-#' model.1 <- model(y.new, components = c("trend", "seasonal"), seas.period = 7)
-#' causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date,
-#'                          s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20,
-#'                          burn = 5, horizon = c('2019-12-05','2020-02-13'))
+#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
+#'                         X = X, dates = dates, int.date = int.date,
+#'                         s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20,
+#'                         burn = 5, horizon = c('2019-12-05','2020-02-13'))
 #'
 #' ## Plotting
 #' plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
@@ -68,10 +68,10 @@
 #' y[dates >= int.date,] <- y[dates >= int.date,]+2
 #'
 #' # Model definition
-#' model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
-#' causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date,
-#'                          s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2),
-#'                          niter = 100, burn = 10)
+#' causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75,
+#'                         dates = dates, int.date = int.date,
+#'                         s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2),
+#'                         niter = 100, burn = 10)
 #'
 #' # Plotting
 #' par(mfrow=c(2,4))
