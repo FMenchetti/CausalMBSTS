@@ -47,7 +47,6 @@ summary.CausalMBSTS <- function(x){
 
       # Bayesian p-value
       end <- start + dim(x$mean.general[[i]])[1] -1 # interval between the intervention and the time horizon
-      print(end)
       true.sum <- colSums(x$y[start:end,])
       pred.sum <- apply(pred[start:end,,], c(2,3), sum) # cumulative causal effect at each iteration
       replicas <- cbind(pred.sum,true.sum) # cumulative sum of the observations in each replicated data set
@@ -107,6 +106,7 @@ print.summary.CausalMBSTS <- function(object, digits = max(3, getOption("digits"
     average.ci <- paste("(", object[[i]][,"lower"], ",", object[[i]][,"upper"], ")" , sep = "")
     cumulative.ci <- paste("(", object[[i]][,"cum.lower"], ",", object[[i]][,"cum.upper"], ")" , sep = "")
     impact <- data.frame(object[[i]][,"mean"], average.ci, object[[i]][,"cum.sum"], cumulative.ci, object[[i]][,"bayes.pval"], object[[i]][,"pct.causal.eff"])
+    rownames(impact) <- rownames(object[[i]])
     colnames(impact) <- c("Avg. Effect", "95% CI", "Cumulative Effect", "95% CI", "Bayesian p-value", "Prob. of a causal effect (%)")
     print(impact)
   }
