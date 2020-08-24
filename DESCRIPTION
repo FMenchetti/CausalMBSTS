@@ -1,12 +1,12 @@
 Package: CausalMBSTS
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Multivariate Bayesian Structural Time Series models for causal inference and forecasting 
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Iavor Bojinov <ibojinov@hbs.edu>, Victoria Liublinska <vliublinska@hbs.edu>, Fiammetta Menchetti <fiammetta.menchetti@unifi.it>, Ista Zahn <izahn@hbs.edu> 
+Maintainer: Victoria Liublinska <vliublinska@hbs.edu>, Fiammetta Menchetti <fiammetta.menchetti@unifi.it>, Ista Zahn <izahn@hbs.edu>
+Description: Infers the causal effect of an intervention on a multivariate response through the use of Multivariate Bayesian Structural Time Series models (MBSTS).
+The package also includes functions for model building and forecasting.  
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
