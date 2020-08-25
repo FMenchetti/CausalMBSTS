@@ -26,10 +26,12 @@ CausalMBSTS(
 )
 }
 \arguments{
-\item{y}{t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.}
+\item{y}{t x d data.frame (or matrix) of observations, where d is the number
+of time series in the multivariate model.}
 
-\item{components}{Character vector specifying the components of the multivariate structural time series model.
-Possible values are c("trend", "slope", "seasonal", "cycle").}
+\item{components}{Character vector specifying the components of the
+multivariate structural time series model. Possible values are c("trend",
+"slope", "seasonal", "cycle").}
 
 \item{seas.period}{Length of the seasonal pattern, if present.}
 
@@ -37,38 +39,56 @@ Possible values are c("trend", "slope", "seasonal", "cycle").}
 
 \item{X}{Optional t x N data frame (or matrix) of N predictors.}
 
-\item{dates}{a vector of dates of length t (with elements of class \code{Date}) that correspond to observations in y.}
+\item{dates}{a vector of dates of length t (with elements of class
+\code{Date}) that correspond to observations in y.}
 
 \item{int.date}{Date of the intervention (must be of class \code{Date}).}
 
-\item{alpha}{Level of credible interval to report for the estimated causal effect. Default set to 0.05 (i.e., reporting a two-sided 95\% credible interval).}
+\item{alpha}{Level of credible interval to report for the estimated causal
+effect. Default set to 0.05 (i.e., reporting a two-sided 95\% credible
+interval).}
 
-\item{excl.dates}{Optional vector of length t, specifying the dates (if any) in the post period that should be excluded from the
-computation of the causal effect. The elements of the vector must be either 0 (the corresponding date is retained) or
-1 (the corresponding date is excluded). The first part that corresponds to  \code{dates < int.date} is ignored.}
+\item{excl.dates}{Optional vector of length t, specifying the dates (if any)
+in the post period that should be excluded from the computation of the
+causal effect. The elements of the vector must be either 0 (the
+corresponding date is retained) or 1 (the corresponding date is excluded).
+The first part that corresponds to \code{dates < int.date} is ignored.}
 
-\item{horizon}{Optional, vector of dates (with elements of class  \code{Date}). If provided, a causal effect
-is computed for the time horizon(s) between \code{int.date} and each specified date. Defaults to the date of the last observation.}
+\item{horizon}{Optional, vector of dates (with elements of class
+\code{Date}). If provided, a causal effect is computed for the time
+horizon(s) between \code{int.date} and each specified date. Defaults to the
+date of the last observation.}
 
-\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].}
+\item{H}{P x P variance-covariance matrix of the regression coefficients. Set
+by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The
+value of the scaling factor is set to \code{c = 1}. Alternative priors
+could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995
+that suggest setting \code{c} in the range [10,1000].}
 
-\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
-Set by default to d + 2 (must be greater than d - 1).}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each element
+of Sigma.r, a vector of errors for state r. Set by default to d + 2 (must
+be greater than d - 1).}
 
-\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector of errors for state r. Must be a (d x d)
-positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r, a
+vector of errors for state r. Must be a (d x d) positive definite. Default
+set to the variance-covariance matrix of y multiplied by a scaling factor
+of 0.01.}
 
-\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time
-series. Set by default to d + 2 (must be greater than d - 1).}
+\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps,
+a vector of observation errors for each time series. Set by default to d +
+2 (must be greater than d - 1).}
 
-\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
-Must be a (d x d) positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.}
+\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps, a
+vector of observation errors for each time series. Must be a (d x d)
+positive definite. Default set to the variance-covariance matrix of y
+multiplied by a scaling factor of 0.01.}
 
 \item{niter}{Number of MCMC iterations.}
 
 \item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message is printed every \code{ping} iteration. Default set to 0.1 * \code{niter}.}
+\item{ping}{A status message is printed every \code{ping} iteration. Default
+set to 0.1 * \code{niter}.}
 }
 \value{
 A list with the following components:

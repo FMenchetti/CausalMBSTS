@@ -11,9 +11,11 @@
 
 \item{int.date}{Date of the intervention.}
 
-\item{type}{A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
+\item{type}{A character string indicating the type of plot to be produced.
+Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
 
-\item{prob}{Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.}
+\item{prob}{Regressors inclusion probabilities above 'prob' are plotted.
+Optional, only required for type = 'inclusion.prob'.}
 
 \item{...}{Arguments passed to other methods (currently unused).}
 }
@@ -21,13 +23,18 @@
 NULL, invisibly.
 }
 \description{
-Given an object of class 'CausalMBSTS', the function draws: i) the plot of the estimated (pointwise) causal impact; ii) the original time series plotted against the predicted counterfactual; iii) posterior predictive checks; iv) regressor inclusion probabilities (only for models with a regression component).
+Given an object of class 'CausalMBSTS', the function draws: i) the plot of
+the estimated (pointwise) causal impact; ii) the original time series plotted
+against the predicted counterfactual; iii) posterior predictive checks; iv)
+regressor inclusion probabilities (only for models with a regression
+component).
 }
 \details{
-'impact' plots the general causal effect at every time points in the post period.
-'forecast' plots the observed time series against the predicted counterfactual.
-'ppchecks' draws posterior predictive checks for the model estimated in the pre period.
-'inclusion.probs' plots the regressors inclusion probabilities.
+'impact' plots the general causal effect at every time points in the post
+period. 'forecast' plots the observed time series against the predicted
+counterfactual. 'ppchecks' draws posterior predictive checks for the model
+estimated in the pre period. 'inclusion.probs' plots the regressors inclusion
+probabilities.
 }
 \examples{
 
@@ -37,7 +44,9 @@ y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
 dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 400)
 
-# Adding a fictional intervention and four covariates. To illustrate the functioning of Bayesian model selection, one covariate is assumed to be unrelated to y.
+# Adding a fictional intervention and four covariates. To illustrate the
+# functioning of Bayesian model selection, one covariate is assumed to be
+# unrelated to y.
 int.date <- as.Date('2019-11-05')
 y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
 x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
@@ -47,8 +56,10 @@ x4 <- rnorm(dim(y)[1], 5, 10)
 X <- cbind(x1, x2, x3, x4)
 
 # Model definition
-model.1 <- model(y.new, components = c("trend", "seasonal"), seas.period = 7)
-causal.1 <- causal.mbsts(model.1, X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20, burn = 5, horizon = c('2019-12-05','2020-02-13'))
+causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
+                        X = X, dates = dates, int.date = int.date,
+                        s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20,
+                        burn = 5, horizon = c('2019-12-05','2020-02-13'))
 
 ## Plotting
 plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
@@ -68,8 +79,10 @@ int.date <- as.Date("2020-02-27")
 y[dates >= int.date,] <- y[dates >= int.date,]+2
 
 # Model definition
-model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
-causal.2 <- causal.mbsts(model.2, dates = dates, int.date = int.date, s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2), niter = 100, burn = 10)
+causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75,
+                        dates = dates, int.date = int.date,
+                        s0.r = 0.01*diag(2), s0.eps = 0.1*diag(2),
+                        niter = 100, burn = 10)
 
 # Plotting
 par(mfrow=c(2,4))

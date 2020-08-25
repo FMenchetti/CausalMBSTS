@@ -9,7 +9,9 @@ model(y, components, seas.period = NULL, cycle.period = NULL)
 \arguments{
 \item{y}{t x d matrix or data.frame of observations.}
 
-\item{components}{Character vector specifying the components of the multivariate structural time series model. Possible values in c("trend", "slope", "seasonal", "cycle").}
+\item{components}{Character vector specifying the components of the
+multivariate structural time series model. Possible values in c("trend",
+"slope", "seasonal", "cycle").}
 
 \item{seas.period}{Length of the seasonal pattern.}
 

@@ -22,14 +22,20 @@ mcmc(
 
 \item{X}{t x P optional matrix of predictors.}
 
-\item{H}{P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].}
+\item{H}{P x P variance-covariance matrix of the regression coefficients. Set
+by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The
+value of the scaling factor is set to \code{c = 1}. Alternative priors
+could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995
+that suggest setting \code{c} in the range [10,1000].}
 
-\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each Sigma.r. Set by default to n0.r = d + 2,
-where d is the number of time series in the multivariate model.}
+\item{nu0.r}{Degrees of freedom of the Inverse-Wishart prior for each
+Sigma.r. Set by default to n0.r = d + 2, where d is the number of time
+series in the multivariate model.}
 
 \item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r.}
 
-\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps. Set by default to d + 2.}
+\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps.
+Set by default to d + 2.}
 
 \item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps.}
 
@@ -37,7 +43,8 @@ where d is the number of time series in the multivariate model.}
 
 \item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message it's printed every 'ping' iteration, defaults to 0.1 * \code{niter}.}
+\item{ping}{A status message it's printed every 'ping' iteration, defaults to
+0.1 * \code{niter}.}
 }
 \value{
 An object of class 'mbsts' which is a list with the following components:
@@ -47,8 +54,10 @@ An object of class 'mbsts' which is a list with the following components:
   \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
   \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
   \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
-  \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
-  \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+  \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration
+                (if a matrix of predictors is provided).}
+  \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior
+               distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
   \item{X}{Predictor matrix (if provided).}
   \item{y}{Matrix of observations.}
   \item{Z}{(d x m) selection matrix of the observation equation.}
