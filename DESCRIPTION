@@ -4,8 +4,9 @@ Title: Multivariate Bayesian Structural Time Series models for causal inference 
 Version: 0.1.0
 Author: Iavor Bojinov <ibojinov@hbs.edu>, Victoria Liublinska <vliublinska@hbs.edu>, Fiammetta Menchetti <fiammetta.menchetti@unifi.it>, Ista Zahn <izahn@hbs.edu> 
 Maintainer: Victoria Liublinska <vliublinska@hbs.edu>, Fiammetta Menchetti <fiammetta.menchetti@unifi.it>, Ista Zahn <izahn@hbs.edu>
-Description: Infers the causal effect of an intervention on a multivariate response through the use of Multivariate Bayesian Structural Time Series models (MBSTS).
-The package also includes functions for model building and forecasting.  
+Description: Infers the causal effect of an intervention on a multivariate response through the use of
+    Multivariate Bayesian Structural Time Series models (MBSTS). The package also includes functions
+    for model building and forecasting.  
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
