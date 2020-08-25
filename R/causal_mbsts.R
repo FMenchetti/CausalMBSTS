@@ -73,7 +73,22 @@
 #' @param ping A status message is printed every \code{ping} iteration. Default
 #'   set to 0.1 * \code{niter}.
 #'
-#' @details {PERHAPS ADD MORE DETAILS OF THE PROCEDURE HERE}
+#' @details {The assumed model is based on Normally distributed disturbance terms.
+#' The \code{components} provide flexibility for model formulation, allowing to add
+#' simultaneously up to four components that encapsulate the characteristics of a data set.
+#' The unknown parameters are the variance-covariance matrices of the error terms and,
+#' if covariates are provided, the matrix of regression coefficients. Because of conjugacy, the priors placed on the
+#' variance-covariance matrices of the error terms are Inverse-Wishart distributions and the
+#' arguments (nu0.eps, s0.eps) and (nu0.r, s0.r) regulate their hyperparameters. The regression coeffiecients are assumed
+#' to follow a matrix normal prior and, to incorporate a sparsity assumption, the prior mean is set to zero and
+#' a vector selecting the relevant covariates is introduced with a data augmentation step.
+#' Sampling from the joint posterior distribution of the states and model parameters is performed with a
+#' Gibbs sampler. The estimated model is then used to perform predictions
+#' of the counterfactual potential outcomes in the period following the intervention date. In a final step, the predictions are compared
+#' to the observed outcomes, thereby defining a causal effect at each time point (pointwise effect).
+#' The output \code{general effect} summarizes the estimates of two causal effects: the average causal
+#' effect (temporal average of the pointwise effect) and the cumulative causal effect (cumulative sum of the pointwise effect).
+#' For further details see the paper Menchetti & Bojinov (2020).}
 #'
 #' @return A list with the following components:
 #'   \item{mcmc}{An object of class \code{mbsts}.}
@@ -81,7 +96,7 @@
 #'   \item{y}{Observations in the analysis period (excluding \code{excl.dates} if provided).}
 #'   \item{dates}{Dates in the analysis period (excluding \code{excl.dates} if provided).}
 #'   \item{general}{General causal effect for all iterations.}
-#'   \item{general.effect}{Estimated average causal effect and a (1-\code{alpha})\% credible interval. Returns a list if \code{horizon} is specified.}
+#'   \item{general.effect}{Estimated average causal effect, cumulative causal effect and (1-\code{alpha})\% credible intervals. Returns a list if \code{horizon} is specified.}
 #'   \item{mean.general}{Pointwise effect. Returns a list if \code{horizon} is specified.}
 #'   \item{lower.general}{Lower bound of a (1-\code{alpha})\% credible interval of the pointwise effect. Returns a list if \code{horizon} is specified.}
 #'   \item{upper.general}{Upper bound of a (1-\code{alpha})\% credible interval of the pointwise effect. Returns a list if \code{horizon} is specified.}
