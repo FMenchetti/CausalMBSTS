@@ -31,6 +31,7 @@ y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
 model.1 <- model(y, components = c("trend","seasonal"), seas.period = 7)
 
 # Example 2: local level  + cycle
+t <- seq(from = 0,to = 4*pi, length.out=300)
 y <- cbind(3*sin(2*t)+rnorm(300), 2*cos(2*t) + rnorm(300))
 model.2 <- model(y, components = c("trend", "cycle"), cycle.period = 75)
 }
