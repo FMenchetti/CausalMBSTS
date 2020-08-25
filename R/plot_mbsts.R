@@ -48,7 +48,7 @@
 #' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
 #'                         X = X, dates = dates, int.date = int.date,
 #'                         s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 20,
-#'                         burn = 5, horizon = c('2019-12-05','2020-02-13'))
+#'                         burn = 5, horizon = as.Date(c('2019-12-05','2020-02-13')))
 #'
 #' ## Plotting
 #' plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)

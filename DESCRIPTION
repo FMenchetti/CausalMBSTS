@@ -19,3 +19,5 @@ Imports:
     MASS,
     Matrix,
     MixMatrix
+Suggests: 
+    testthat

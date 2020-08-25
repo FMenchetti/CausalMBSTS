@@ -137,7 +137,7 @@
 #' # Causal effect estimation
 #' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7, X = X,
 #'                         dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3),
-#'                         niter = 100, burn = 10, horizon = c('2019-12-05','2020-02-13'))
+#'                         niter = 100, burn = 10, horizon = as.Date(c('2019-12-05','2020-02-13')))
 #' summary(causal.1)
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)
@@ -187,7 +187,7 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
         if(any(!as.integer(excl.dates) %in% c(0L, 1L))) stop("`excl.dates` must be 0/1 or TRUE/FALSE")
         if(length(excl.dates) != nrow(y)) stop("length(`excl.dates`) != nrow(`y`)")
     }
-    if(!missing(horizon) && !any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
+    if(!missing(horizon) && !any(class(horizon) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
         stop("`horizon` must be a Date object")
     if(missing(s0.r)){s0.r <- NULL}
     if(missing(s0.eps)){s0.eps <- NULL}
@@ -197,6 +197,7 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
 
     ### STEP 1. Dividing pre and post periods
     ind <- dates < int.date
+    if(all(!ind)) stop("All 'dates' are prior to 'int.date'.")
     X.pre <- X[ind, ]
     X.post <- X[!ind, ]
     if(is.null(dimnames(y)[[2]])) dimnames(y)[[2]] <- paste("y",seq(1,dim(y)[2],by=1), sep="")
