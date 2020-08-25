@@ -22,15 +22,19 @@
 #'
 #' @importFrom MASS mvrnorm
 #' @param object An object of class 'mbsts'.
-#' @param steps.ahead An integer value (S) specifying the number of steps ahead to be forecasted.
-#' If 'mbsts' contains a regression component the argument is disregarded and a prediction is made with the same length of 'newdata'.
-#' @param newdata Optional matrix of new data. Only required when 'mbsts' contains a regression component.
+#' @param steps.ahead An integer value (S) specifying the number of steps ahead
+#'     to be forecasted. If 'mbsts' contains a regression component the argument
+#'     is disregarded and a prediction is made with the same length of
+#'     'newdata'.
+#' @param newdata Optional matrix of new data. Only required when 'mbsts'
+#'     contains a regression component.
 #' @param ... Arguments passed to other methods (currently unused).
 #'
 #' @return Returns a list with the following components
 #' \describe{
 #'   \item{post.pred.0}{t x d x ('niter'- 'burn') array of in-sample forecasts.}
-#'   \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is the number of forecasted periods (set to the length of provided new data).}
+#'   \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is
+#'         the number of forecasted periods (set to the length of provided new data).}
 #'   \item{post.pred}{(t + S) x d x ('niter'- 'burn') array combining in- and out-of-sample forecasts.}
 #' }
 #' @export
@@ -40,13 +44,15 @@
 #' y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
 #'            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
 #'            rnorm(400, 5,1))
-#' mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+#' mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, s0.r = diag(3),
+#'                     s0.eps = diag(3), niter = 100, burn = 10)
 #' pred.1 <- predict(mbsts.1, steps.ahead = 10)
 #'
 #' ## Example 2
 #' y <- cbind(rnorm(100), rnorm(100, 2, 3))
 #' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-#' mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
+#' mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, X = X, s0.r = diag(2),
+#'                     s0.eps = diag(2), niter = 100, burn = 10)
 #' newdata <- cbind(rnorm(30), rt(30, 2))
 #' pred.2 <- predict(mbsts.2, newdata = newdata)
 
@@ -68,6 +74,14 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     #   post.pred.1 : S x d x niter array out-of-sample forecasts, where S is the number of
     #                 forecasted periods (set to the length of provided new data)
     #   post.pred   : (T + S) x d x niter array combining in- and out-of-sample forecasts
+
+    ## Parameter checks
+    if(!missing(steps.ahead))
+        if(as.integer(steps.ahead) != steps.ahead | length(steps.ahead) != 1)
+            stop("'steps.ahead' must be an integer of length one")
+    if(!missing(newdata))
+        if(!is.null(newdata) && !any(class(newdata) %in% c("matrix", "data.frame")))
+            stop("'newdata' must be a matrix")
 
     ### Dimensionalities & other objects
     mbsts <- object

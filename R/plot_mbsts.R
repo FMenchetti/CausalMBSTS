@@ -17,7 +17,7 @@
 #' @param x Object of class 'CausalMBSTS'
 #' @param int.date Date of the intervention.
 #' @param type A character string indicating the type of plot to be produced.
-#'   Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
+#'   Possible values in 'c('impact', 'forecast', 'ppchecks', 'inclusion.probs')'.
 #' @param prob Regressors inclusion probabilities above 'prob' are plotted.
 #'   Optional, only required for type = 'inclusion.prob'.
 #' @param ... Arguments passed to other methods (currently unused).
@@ -92,6 +92,9 @@ plot.CausalMBSTS <- function(x, int.date, type = c("impact", "forecast", "ppchec
     #  type       :  A character string indicating the type of plot to be produced. Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.
     #  prob       :  Regressors inclusion probabilities above 'prob' are plotted. Optional, only required for type = 'inclusion.prob'.
 
+    ## Parameter checks
+    if(!all(type %in% c("impact", "forecast", "ppchecks", "inclusion.probs")))
+        stop("allowed 'type' values are 'impact', 'forecast', 'ppchecks' and 'inclusion.probs'")
 
     ### Causal effect plot
     if ("impact" %in% type) {

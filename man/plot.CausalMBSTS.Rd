@@ -12,7 +12,7 @@
 \item{int.date}{Date of the intervention.}
 
 \item{type}{A character string indicating the type of plot to be produced.
-Possible values in 'c('impact','forecast','ppchecks', 'inclusion.probs')'.}
+Possible values in 'c('impact', 'forecast', 'ppchecks', 'inclusion.probs')'.}
 
 \item{prob}{Regressors inclusion probabilities above 'prob' are plotted.
 Optional, only required for type = 'inclusion.prob'.}
