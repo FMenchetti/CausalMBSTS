@@ -81,8 +81,8 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
     burn, ping = NULL) {
 
     ### Dimensionalities & other inputs
-    d <- dim(y)[2]  # number of time series
     y <- Smodel$y
+    d <- dim(y)[2]  # number of time series
     t <- dim(y)[1]  # number of time points
     rr <- dim(Smodel$R)[2]  # tot number of state disturbances
     r <- rr/d  # number of state disturbances for each time series
