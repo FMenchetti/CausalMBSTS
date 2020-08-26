@@ -1,2 +1,15 @@
-^.*\.Rproj$
-^\.Rproj\.user$
+^README\.Rmd$
+^README\.md$
+^LICENSE\.md$
+^cran-comments\.md$
+^\.travis\.yml$
+^data-raw$
+^pkgdown$
+^_pkgdown\.yml$
+^\.github$
+^\.Rhistory\$
+^\.gitattributes\$
+^\.gitignore\$
+^\.Rcheck\$
+^\.Rproj.user\$
+^\.git\$
