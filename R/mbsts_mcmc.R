@@ -96,12 +96,12 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
     }
 
     # set default ping
-    if (missing(ping)) {
+    if (is.null(ping)) {
         ping <- 0.1 * niter
     }
     sequence = vector(mode = "integer")
     if(!is.null(ping) && ping > 0) sequence <- seq(ping, niter, by = ping)
-    
+
     # set default nu0.r and nu0.eps
     if (is.null(nu0.r)) {
         nu0.r <- d + 2
