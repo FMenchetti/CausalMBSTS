@@ -2,7 +2,7 @@
 % Please edit documentation in R/predict_mbsts.R
 \name{predict.mbsts}
 \alias{predict.mbsts}
-\title{Prediction for a given multivariate Bayesian structural time series model}
+\title{Predictions for a given multivariate Bayesian structural time series model}
 \usage{
 \method{predict}{mbsts}(object, steps.ahead, newdata = NULL, ...)
 }

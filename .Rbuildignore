@@ -13,3 +13,5 @@
 ^\.Rcheck\$
 ^\.Rproj.user\$
 ^\.git\$
+^.*\.Rproj$
+^\.Rproj\.user$

@@ -1,26 +1,38 @@
-#' Define and estimate a Multivariate Bayesian Structural Time Series model (MBSTS)
+#' Definition and estimation of a Multivariate Bayesian Structural Time Series model (MBSTS)
 #'
-#' The function creates a multivariate Bayesian structural time series model. It then estimates the model, samples from the joint posterior
-#' distribution of its parameters, and outputs an object of class \code{mbsts}.
+#' The function creates a multivariate Bayesian structural time series model. It then estimates
+#' the model, samples from the joint posterior distribution of its parameters, and outputs an
+#' object of class \code{mbsts}.
 #'
-#' @param y t x d data.frame (or matrix) of observations, where d is the number of time series in the multivariate model.
-#' @param components Character vector specifying the components of the multivariate structural time series model.
-#' Possible values are c("trend", "slope", "seasonal", "cycle").
+#' @param y t x d data.frame (or matrix) of observations, where d is the number of time series
+#' in the multivariate model.
+#' @param components Character vector specifying the components of the multivariate structural
+#' time series model. Possible values are c("trend", "slope", "seasonal", "cycle").
 #' @param seas.period Length of the seasonal pattern, if present.
 #' @param cycle.period Length of the cycle pattern, if present.
 #' @param X Optional t x N data frame (or matrix) of N predictors.
-#' @param H P x P variance-covariance matrix of the regression coefficients. Set by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of the scaling factor is set to \code{c = 1}. Alternative priors could be H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest setting \code{c} in the range [10,1000].
-#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of Sigma.r, a vector of errors for state r.
+#' @param H P x P variance-covariance matrix of the regression coefficients. Set by
+#' default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The value of
+#' the scaling factor is set to \code{c = 1}. Alternative priors could be
+#' H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest
+#' setting \code{c} in the range [10,1000].
+#' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of
+#' Sigma.r, a vector of errors for state r.
 #' Set by default to d + 2 (must be greater than d - 1).
-#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector of errors for state r. Must be a (d x d)
-#' positive definite. Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01.
-#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time
-#' series. Set by default to d + 2 (must be greater than d - 1).
-#' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector of observation errors for each time series.
-#' Must be a (d x d) positive definite. Default set to Default set to the variance-covariance matrix of y multiplied by a scaling factor of 0.01..
+#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector
+#' of errors for state r. Must be a (d x d) positive definite. Default set to the
+#' variance-covariance matrix of y multiplied by a scaling factor of 0.01.
+#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps,
+#' a vector of observation errors for each time series. Set by default to d + 2
+#' (must be greater than d - 1).
+#' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector
+#' of observation errors for each time series. Must be a (d x d) positive definite.
+#' Default set to Default set to the variance-covariance matrix of y multiplied by
+#' a scaling factor of 0.01..
 #' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
-#' @param ping A status message is printed every 'ping' iteration. Default set to 0.1 * \code{niter}.
+#' @param ping A status message is printed every \code{ping} iteration. Default
+#'   set to 0.1 * \code{niter}. Set to 0 to not track the status.
 #'
 #' @return An object of class 'mbsts' which is a list with the following components:
 #' \describe{
@@ -29,8 +41,10 @@
 #'   \item{states.samples}{(\code{niter}- \code{burn}) draws from p(alpha_t | Y_{1:T}).}
 #'   \item{Sigma.r}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.r.}
 #'   \item{Sigma.eps}{(\code{niter}- \code{burn}) draws from the posterior distribution of Sigma.eps.}
-#'   \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each iteration (if a matrix of predictors is provided).}
-#'   \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
+#'   \item{Z.beta}{(\code{niter}- \code{burn}) x P matrix of the models selected at each
+#'   iteration (if a matrix of predictors is provided).}
+#'   \item{beta}{ P x d x (\code{niter}- \code{burn}) ) array of the draws from the posterior
+#'   distribution of the regression coefficient matrix (if a matrix of predictors is provided).}
 #'   \item{X}{Predictor matrix (if provided).}
 #'   \item{y}{Matrix of observations.}
 #'   \item{Z}{(d x m) selection matrix of the observation equation.}
@@ -56,8 +70,8 @@
 #'                     X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
 as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL,
-                     H = NULL, nu0.r = NULL, s0.r = 0.01 * var(y, na.rm = T), nu0.eps = NULL, s0.eps = 0.01 * var(y, na.rm = T), niter,
-                     burn, ping = NULL){
+                     H = NULL, nu0.r = NULL, s0.r = 0.01 * var(y, na.rm = T), nu0.eps = NULL,
+                     s0.eps = 0.01 * var(y, na.rm = T), niter, burn, ping = NULL){
 
   ## Parameter checks
   if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
@@ -83,7 +97,8 @@ as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X =
   Smodel <- model(y = y, components = components, seas.period = seas.period, cycle.period = cycle.period)
 
   # Model estimation (MCMC)
-  est <- mcmc(Smodel = Smodel, X = X, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps, s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
+  est <- mcmc(Smodel = Smodel, X = X, H = H, nu0.r = nu0.r, s0.r = s0.r, nu0.eps = nu0.eps,
+              s0.eps = s0.eps, niter = niter, burn = burn, ping = ping)
 
   class(est) <- "mbsts"
   return(est)

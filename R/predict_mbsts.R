@@ -12,7 +12,7 @@
 ######################################################################################
 ######################################################################################
 
-#' Prediction for a given multivariate Bayesian structural time series model
+#' Predictions for a given multivariate Bayesian structural time series model
 #'
 #' Given an object of class 'mbsts' and the number of 'steps.ahead' in the future to be
 #' forecasted, this function provides in-sample forecasts and out-of-sample forecasts,

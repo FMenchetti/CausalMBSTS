@@ -2,7 +2,7 @@
 % Please edit documentation in R/mbsts_mcmc.R
 \name{mcmc}
 \alias{mcmc}
-\title{MCMC for a given MBSTS model}
+\title{MCMC samples for a given MBSTS model}
 \usage{
 mcmc(
   Smodel,
@@ -43,8 +43,8 @@ Set by default to d + 2.}
 
 \item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
-\item{ping}{A status message it's printed every 'ping' iteration, defaults to
-0.1 * \code{niter}.}
+\item{ping}{A status message is printed every \code{ping} iteration. Default
+set to 0.1 * \code{niter}. Set to 0 to not track the status.}
 }
 \value{
 An object of class 'mbsts' which is a list with the following components:
@@ -68,7 +68,7 @@ An object of class 'mbsts' which is a list with the following components:
 }
 }
 \description{
-MCMC to sample from the joint posterior of model parameters in an mbsts model.
+Use MCMC to sample from the joint posterior of model parameters in an mbsts model.
 }
 \examples{
 ## Example 1 : local level + seasonal (d = 3)
@@ -76,7 +76,7 @@ y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
 model.1 <- model(y = y, components = c("trend", "seasonal"), seas.period = 7)
-mcmc.1 <- mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
+mcmc.1 <- mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100,samples  burn = 10)
 
 ## Example 2 : local level + seasonal + covariates (d = 2)
 y <- cbind(rnorm(100), rnorm(100, 2, 3))

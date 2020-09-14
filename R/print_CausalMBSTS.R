@@ -1,7 +1,6 @@
-
-#' Summarize results of causal effect estimation with CausalMBSTS
+#' Summary of causal effect estimation results obtained with \code{CausalMBSTS}
 #'
-#' The method extracts and computes various results of the causal analysis with CausalMBSTS.
+#' The method extracts and computes various summaries of the causal analysis with \code{CausalMBSTS}.
 #'
 #' @param x An object of class 'CausalMBSTS', a result of a call to \code{\link{CausalMBSTS}}.
 #'

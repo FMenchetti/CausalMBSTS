@@ -12,7 +12,8 @@
 \item{int.date}{Date of the intervention.}
 
 \item{type}{A character string indicating the type of plot to be produced.
-Possible values in 'c('impact', 'forecast', 'ppchecks', 'inclusion.probs')'.}
+Possible values in 'c('impact', 'forecast', 'ppchecks', 'inclusion.probs')'.
+See Details for further explanation.}
 
 \item{prob}{Regressors inclusion probabilities above 'prob' are plotted.
 Optional, only required for type = 'inclusion.prob'.}
@@ -24,17 +25,20 @@ NULL, invisibly.
 }
 \description{
 Given an object of class 'CausalMBSTS', the function draws: i) the plot of
-the estimated (pointwise) causal impact; ii) the original time series plotted
+the estimated (pointwise) causal effect; ii) the original time series plotted
 against the predicted counterfactual; iii) posterior predictive checks; iv)
 regressor inclusion probabilities (only for models with a regression
 component).
 }
 \details{
-'impact' plots the general causal effect at every time points in the post
-period. 'forecast' plots the observed time series against the predicted
-counterfactual. 'ppchecks' draws posterior predictive checks for the model
-estimated in the pre period. 'inclusion.probs' plots the regressors inclusion
-probabilities.
+Option 'impact' for parameter \code{type} plots the general causal effect at every time points in the post
+  period. Multiple plots will be generated, corresponding to each combination of time series and horizon (if specified).
+  Option 'forecast' plots the observed time series against the predicted counterfactual, one plot per each
+  combination of time series and horizon (if specified).'ppchecks' draws posterior predictive checks for the model
+  estimated in the pre-period. They include four plots generated for each time series (and horizon). The plots are
+  (1) density of posterior mean vs. density of the data before intervention, (2) Histogram of maximum in-sample forecasts
+  an Bayes p-value, (3) QQ-plot of residuals, and (4) ACF of residuals. Option 'inclusion.probs' plots the regressors'
+  inclusion probabilities above 'prob'.
 }
 \examples{
 

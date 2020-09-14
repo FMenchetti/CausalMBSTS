@@ -88,7 +88,7 @@ multiplied by a scaling factor of 0.01.}
 \item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
 \item{ping}{A status message is printed every \code{ping} iteration. Default
-set to 0.1 * \code{niter}.}
+set to 0.1 * \code{niter}. Set to 0 to not track the status.}
 }
 \value{
 A list with the following components:

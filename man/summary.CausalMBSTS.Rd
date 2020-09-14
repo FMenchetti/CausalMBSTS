@@ -2,7 +2,7 @@
 % Please edit documentation in R/print_CausalMBSTS.R
 \name{summary.CausalMBSTS}
 \alias{summary.CausalMBSTS}
-\title{Summarize results of causal effect estimation with CausalMBSTS}
+\title{Summary of causal effect estimation results obtained with \code{CausalMBSTS}}
 \usage{
 \method{summary}{CausalMBSTS}(x)
 }
@@ -22,7 +22,7 @@ date provided in \code{horizon} (or its default value) with the following column
   \item{pct.causal.eff}{Probability of a causal effect (\%)}
 }
 \description{
-The method extracts and computes various results of the causal analysis with CausalMBSTS.
+The method extracts and computes various summaries of the causal analysis with \code{CausalMBSTS}.
 }
 \examples{
 set.seed(1)

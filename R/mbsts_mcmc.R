@@ -13,9 +13,9 @@
 ######################################################################################
 
 
-#' MCMC for a given MBSTS model
+#' MCMC samples for a given MBSTS model
 #'
-#' MCMC to sample from the joint posterior of model parameters in an mbsts model.
+#' Use MCMC to sample from the joint posterior of model parameters in an mbsts model.
 #'
 #' @import KFAS
 #' @importFrom CholWishart rInvWishart
@@ -38,8 +38,8 @@
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
 #' @param niter Number of MCMC iteration.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
-#' @param ping A status message it's printed every 'ping' iteration, defaults to
-#'   0.1 * \code{niter}.
+#' @param ping A status message is printed every \code{ping} iteration. Default
+#'   set to 0.1 * \code{niter}. Set to 0 to not track the status.
 #'
 #' @return An object of class 'mbsts' which is a list with the following components:
 #' \describe{
@@ -77,7 +77,7 @@
 #' model.2 <- model(y = y, components = c("trend", "seasonal"), seas.period = 7)
 #' mcmc.2 <- mcmc(model.2, X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
-mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL, s0.eps , niter,
+mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL, s0.eps, niter,
     burn, ping = NULL) {
 
     ### Dimensionalities & other inputs

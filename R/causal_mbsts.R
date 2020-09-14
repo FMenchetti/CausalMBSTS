@@ -71,7 +71,7 @@
 #' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
 #' @param ping A status message is printed every \code{ping} iteration. Default
-#'   set to 0.1 * \code{niter}.
+#'   set to 0.1 * \code{niter}. Set to 0 to not track the status.
 #'
 #' @details {The assumed model is based on Normally distributed disturbance terms.
 #' The \code{components} provide flexibility for model formulation, allowing to add
@@ -191,9 +191,6 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
         stop("`horizon` must be a Date object")
     if(missing(s0.r)){s0.r <- NULL}
     if(missing(s0.eps)){s0.eps <- NULL}
-
-
-
 
     ### STEP 1. Dividing pre and post periods
     ind <- dates < int.date
