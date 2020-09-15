@@ -21,12 +21,12 @@
 #' Note that NA values are not allowed in the new regressor matrix.
 #'
 #' @importFrom MASS mvrnorm
-#' @param object An object of class 'mbsts'.
+#' @param object An object of class 'mbsts', a result of call to \code{\link{as.mbsts}}.
 #' @param steps.ahead An integer value (S) specifying the number of steps ahead
-#'     to be forecasted. If 'mbsts' contains a regression component the argument
+#'     to be forecasted. If 'object' contains a regression component, the argument
 #'     is disregarded and a prediction is made with the same length of
 #'     'newdata'.
-#' @param newdata Optional matrix of new data. Only required when 'mbsts'
+#' @param newdata Optional matrix of new data. Only required when 'object'
 #'     contains a regression component.
 #' @param ... Arguments passed to other methods (currently unused).
 #'
@@ -34,7 +34,7 @@
 #' \describe{
 #'   \item{post.pred.0}{t x d x ('niter'- 'burn') array of in-sample forecasts.}
 #'   \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is
-#'         the number of forecasted periods (set to the length of provided new data).}
+#'         the number of forecasted periods (set to the length of 'steps.ahead' or 'newdata').}
 #'   \item{post.pred}{(t + S) x d x ('niter'- 'burn') array combining in- and out-of-sample forecasts.}
 #' }
 #' @export

@@ -17,8 +17,8 @@
 #' H = c*diag((X'X)^(-1)) or H = c*I. See also Smith & Kohn, 1995 that suggest
 #' setting \code{c} in the range [10,1000].
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each element of
-#' Sigma.r, a vector of errors for state r.
-#' Set by default to d + 2 (must be greater than d - 1).
+#' Sigma.r, a vector of errors for state r. Set by default to d + 2
+#' (must be greater than d - 1).
 #' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a vector
 #' of errors for state r. Must be a (d x d) positive definite. Default set to the
 #' variance-covariance matrix of y multiplied by a scaling factor of 0.01.
@@ -28,7 +28,7 @@
 #' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a vector
 #' of observation errors for each time series. Must be a (d x d) positive definite.
 #' Default set to Default set to the variance-covariance matrix of y multiplied by
-#' a scaling factor of 0.01..
+#' a scaling factor of 0.01.
 #' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
 #' @param ping A status message is printed every \code{ping} iteration. Default

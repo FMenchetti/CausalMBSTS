@@ -7,15 +7,16 @@
 model(y, components, seas.period = NULL, cycle.period = NULL)
 }
 \arguments{
-\item{y}{t x d matrix or data.frame of observations.}
+\item{y}{t x d data.frame (or matrix) of observations, where d is the number of time series
+in the multivariate model.}
 
 \item{components}{Character vector specifying the components of the
-multivariate structural time series model. Possible values in c("trend",
+multivariate structural time series model. Possible values are c("trend",
 "slope", "seasonal", "cycle").}
 
-\item{seas.period}{Length of the seasonal pattern.}
+\item{seas.period}{Length of the seasonal pattern, if present.}
 
-\item{cycle.period}{Length of the cycle pattern.}
+\item{cycle.period}{Length of the cycle pattern, if present.}
 }
 \value{
 An object of class 'SSModel'.

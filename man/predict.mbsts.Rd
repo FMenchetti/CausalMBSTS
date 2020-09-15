@@ -7,14 +7,14 @@
 \method{predict}{mbsts}(object, steps.ahead, newdata = NULL, ...)
 }
 \arguments{
-\item{object}{An object of class 'mbsts'.}
+\item{object}{An object of class 'mbsts', a result of call to \code{\link{as.mbsts}}.}
 
 \item{steps.ahead}{An integer value (S) specifying the number of steps ahead
-to be forecasted. If 'mbsts' contains a regression component the argument
+to be forecasted. If 'object' contains a regression component, the argument
 is disregarded and a prediction is made with the same length of
 'newdata'.}
 
-\item{newdata}{Optional matrix of new data. Only required when 'mbsts'
+\item{newdata}{Optional matrix of new data. Only required when 'object'
 contains a regression component.}
 
 \item{...}{Arguments passed to other methods (currently unused).}
@@ -24,7 +24,7 @@ Returns a list with the following components
 \describe{
   \item{post.pred.0}{t x d x ('niter'- 'burn') array of in-sample forecasts.}
   \item{post.pred.1}{S x d x ('niter'- 'burn') array out-of-sample forecasts, where S is
-        the number of forecasted periods (set to the length of provided new data).}
+        the number of forecasted periods (set to the length of 'steps.ahead' or 'newdata').}
   \item{post.pred}{(t + S) x d x ('niter'- 'burn') array combining in- and out-of-sample forecasts.}
 }
 }

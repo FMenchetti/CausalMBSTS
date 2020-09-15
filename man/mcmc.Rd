@@ -20,7 +20,7 @@ mcmc(
 \arguments{
 \item{Smodel}{A multivariate state space model of class \code{SSModel}.}
 
-\item{X}{t x P optional matrix of predictors.}
+\item{X}{t x N optional matrix of predictors.}
 
 \item{H}{P x P variance-covariance matrix of the regression coefficients. Set
 by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The
@@ -32,14 +32,21 @@ that suggest setting \code{c} in the range [10,1000].}
 Sigma.r. Set by default to n0.r = d + 2, where d is the number of time
 series in the multivariate model.}
 
-\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r.}
+\item{s0.r}{Scale matrix of the Inverse-Wishart prior for each Sigma.r, a
+vector of errors for state r. Must be a (d x d) positive definite. Default
+set to the variance-covariance matrix of y multiplied by a scaling factor
+of 0.01.}
 
-\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps.
-Set by default to d + 2.}
+\item{nu0.eps}{Degrees of freedom of the Inverse-Wishart prior for Sigma.eps,
+a vector of observation errors for each time series. Set by default to d + 2
+(must be greater than d - 1).}
 
-\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps.}
+\item{s0.eps}{Scale matrix of the Inverse-Wishart prior for Sigma.eps, a
+vector of observation errors for each time series. Must be a (d x d)
+positive definite. Default set to the variance-covariance matrix of y
+multiplied by a scaling factor of 0.01.}
 
-\item{niter}{Number of MCMC iteration.}
+\item{niter}{Number of MCMC iterations.}
 
 \item{burn}{Desired burn-in, set by default to 0.1 * \code{niter}.}
 
@@ -76,7 +83,7 @@ y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
            rnorm(400, 5,1))
 model.1 <- model(y = y, components = c("trend", "seasonal"), seas.period = 7)
-mcmc.1 <- mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100,samples  burn = 10)
+mcmc.1 <- mcmc(model.1, s0.r = diag(3), s0.eps = diag(3), niter = 100, burn = 10)
 
 ## Example 2 : local level + seasonal + covariates (d = 2)
 y <- cbind(rnorm(100), rnorm(100, 2, 3))

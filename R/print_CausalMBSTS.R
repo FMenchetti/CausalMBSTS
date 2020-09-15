@@ -6,13 +6,13 @@
 #'
 #' @return Returns an object of class \code{summary.CausalMBSTS}, which is a list of data frames corresponding to each
 #' date provided in \code{horizon} (or its default value) with the following columns:
-#'   \item{mean}{Estimated average causal effect.}
-#'   \item{lower}{Lower bound of the two-sided (1-\code{alpha})\% credible interval.}
-#'   \item{upper}{Upper bound of the two-sided (1-\code{alpha})\% credible interval.}
+#'   \item{mean}{Estimated average causal effect}
+#'   \item{lower}{Lower bound of the two-sided (1-\code{alpha})\% credible interval. Note that \code{alpha} parameter is inherited from the object \code{x}.}
+#'   \item{upper}{Upper bound of the two-sided (1-\code{alpha})\% credible interval}
 #'   \item{cum.sum}{Pointwise effect}
-#'   \item{lower.general}{Lower bound of a (1-\code{alpha})\% credible interval of the pointwise effect.}
-#'   \item{upper.general}{Upper bound of a (1-\code{alpha})\% credible interval of the pointwise effect.}
-#'   \item{bayes.pval}{Bayesian p-value for the average causal effect.}
+#'   \item{cum.lower}{Lower bound of a (1-\code{alpha})\% credible interval of the pointwise effect}
+#'   \item{cum.upper}{Upper bound of a (1-\code{alpha})\% credible interval of the pointwise effect}
+#'   \item{bayes.pval}{Bayesian p-value for the average causal effect}
 #'   \item{pct.causal.eff}{Probability of a causal effect (\%)}
 #'
 #' @examples

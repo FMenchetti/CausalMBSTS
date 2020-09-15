@@ -20,10 +20,10 @@
 #' Option 'impact' for parameter \code{type} plots the general causal effect at every time points in the post
 #'   period. Multiple plots will be generated, corresponding to each combination of time series and horizon (if specified).
 #'   Option 'forecast' plots the observed time series against the predicted counterfactual, one plot per each
-#'   combination of time series and horizon (if specified).'ppchecks' draws posterior predictive checks for the model
+#'   combination of time series and horizon (if specified). 'ppchecks' draws posterior predictive checks for the model
 #'   estimated in the pre-period. They include four plots generated for each time series (and horizon). The plots are
 #'   (1) density of posterior mean vs. density of the data before intervention, (2) Histogram of maximum in-sample forecasts
-#'   an Bayes p-value, (3) QQ-plot of residuals, and (4) ACF of residuals. Option 'inclusion.probs' plots the regressors'
+#'   and Bayes p-value, (3) QQ-plot of residuals, and (4) ACF of residuals. Option 'inclusion.probs' plots the regressors'
 #'   inclusion probabilities above 'prob'.
 #'
 #' @return NULL, invisibly.

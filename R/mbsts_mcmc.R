@@ -23,7 +23,7 @@
 #' @importFrom Matrix bdiag
 #' @importFrom MixMatrix rmatrixnorm
 #' @param Smodel A multivariate state space model of class \code{SSModel}.
-#' @param X t x P optional matrix of predictors.
+#' @param X t x N optional matrix of predictors.
 #' @param H P x P variance-covariance matrix of the regression coefficients. Set
 #'   by default to H = c(X'X)^(-1) which is akin to the Zellner's g-prior. The
 #'   value of the scaling factor is set to \code{c = 1}. Alternative priors
@@ -32,11 +32,18 @@
 #' @param nu0.r Degrees of freedom of the Inverse-Wishart prior for each
 #'   Sigma.r. Set by default to n0.r = d + 2, where d is the number of time
 #'   series in the multivariate model.
-#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r.
-#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps.
-#'   Set by default to d + 2.
-#' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps.
-#' @param niter Number of MCMC iteration.
+#' @param s0.r Scale matrix of the Inverse-Wishart prior for each Sigma.r, a
+#'   vector of errors for state r. Must be a (d x d) positive definite. Default
+#'   set to the variance-covariance matrix of y multiplied by a scaling factor
+#'   of 0.01.
+#' @param nu0.eps Degrees of freedom of the Inverse-Wishart prior for Sigma.eps,
+#'   a vector of observation errors for each time series. Set by default to d + 2
+#'   (must be greater than d - 1).
+#' @param s0.eps Scale matrix of the Inverse-Wishart prior for Sigma.eps, a
+#'   vector of observation errors for each time series. Must be a (d x d)
+#'   positive definite. Default set to the variance-covariance matrix of y
+#'   multiplied by a scaling factor of 0.01.
+#' @param niter Number of MCMC iterations.
 #' @param burn Desired burn-in, set by default to 0.1 * \code{niter}.
 #' @param ping A status message is printed every \code{ping} iteration. Default
 #'   set to 0.1 * \code{niter}. Set to 0 to not track the status.
