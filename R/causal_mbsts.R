@@ -228,9 +228,9 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
     y.diff <- y.post.rep - predict$post.pred.1
 
     # removing given dates
-    excl.dates <- excl.dates[dates >= int.date]
     if (!is.null(excl.dates)) {
-        y.diff <- y.diff[excl.dates == 0, , ]
+        excl.dates.post <- excl.dates[dates >= int.date]
+        y.diff <- y.diff[excl.dates.post == 0, , ]
         dates <- dates[excl.dates == 0]
         y <- y[excl.dates == 0, ]
     }
