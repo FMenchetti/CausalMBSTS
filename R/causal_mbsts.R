@@ -180,6 +180,7 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
 
     ### Parameter checks
     if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")
+    y <- as.matrix(y)
     if(!all(components %in% c("trend", "slope", "seasonal", "cycle")))
         stop("`components` must be one of 'trend', 'slop', 'seasonal', or 'cycle'")
     if(!missing(seas.period) && (!is.numeric(seas.period) ||length(seas.period) != 1))
@@ -188,6 +189,7 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
         stop("`cycle.period` must be a numeric vector of length one")
     if(!missing(X)) {
         if(!is.matrix(X) && !is.data.frame(X)) stop("`X` must be a matrix or data.frame")
+        X <- as.matrix(X)
         if(nrow(X) != nrow (y)) stop("nrow(X) != nrow(X)")
     }
     if(!any(class(dates) %in% c("Date", "POSIXct", "POSIXlt", "POSIXt")))
@@ -227,6 +229,7 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
 
     ### STEP 4. Causal effect estimation
     burn <- mbsts$burn
+
     y.post.rep <- array(y.post, c(nrow(y.post), ncol(y.post), niter - burn))
     y.diff <- y.post.rep - predict$post.pred.1
 
