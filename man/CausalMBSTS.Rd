@@ -138,6 +138,8 @@ The output component \code{general.effect} summarizes the estimates of two causa
 causal effect (temporal average of the pointwise effect) and the cumulative causal effect (cumulative
 sum of the pointwise effect).
 
+Run \code{vignette("CausalMBSTS")} for a detailed example.
+
 For further details see Menchetti & Bojinov (2020).}
 }
 \examples{

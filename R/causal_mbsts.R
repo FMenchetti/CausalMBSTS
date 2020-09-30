@@ -95,6 +95,8 @@
 #' causal effect (temporal average of the pointwise effect) and the cumulative causal effect (cumulative
 #' sum of the pointwise effect).
 #'
+#' Run \code{vignette("CausalMBSTS")} for a detailed example.
+#'
 #' For further details see Menchetti & Bojinov (2020).}
 #'
 #' @return A list with the following components:
@@ -216,7 +218,8 @@ CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,
                        cycle.period = cycle.period, X = X.pre, H = H, nu0.r = nu0.r,
                        s0.r = s0.r, nu0.eps = nu0.eps, s0.eps = s0.eps, niter = niter,
                        burn = burn, ping = ping)
-    mbsts_args <- mbsts_args[sapply(mbsts_args, function(x) !is.na(x) && !is.null(x))]
+
+    mbsts_args <- mbsts_args[sapply(mbsts_args, function(x) !is.null(x))] # !is.na(x) &&
     mbsts <- do.call(as.mbsts, mbsts_args)
 
     ### STEP 3. In- and out-of-sample forecasts from the PPD
