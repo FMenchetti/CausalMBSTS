@@ -4,17 +4,17 @@
 \alias{print.summary.CausalMBSTS}
 \title{Format and print the estimated causal effect(s), credible interval(s), and Bayesian p-value(s) into a clear output.}
 \usage{
-\method{print}{summary.CausalMBSTS}(object, digits = max(3, getOption("digits") - 3), ...)
+\method{print}{summary.CausalMBSTS}(x, digits = max(3, getOption("digits") - 3), ...)
 }
 \arguments{
-\item{object}{An object of class 'summary.CausalMBSTS', a result of a call to \code{\link{summary.CausalMBSTS}}.}
+\item{x}{An object of class 'summary.CausalMBSTS', a result of a call to \code{\link{summary.CausalMBSTS}}.}
 
 \item{digits}{Number of digits to display.}
 
 \item{...}{Additional arguments passed to other methods.}
 }
 \value{
-Invisibly, \code{object}.
+Invisibly, \code{x}.
 }
 \description{
 Format and print the estimated causal effect(s), credible interval(s), and Bayesian p-value(s) into a clear output.

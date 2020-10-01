@@ -51,7 +51,8 @@
 #' ## Example 2
 #' y <- cbind(rnorm(100), rnorm(100, 2, 3))
 #' X <- cbind(rnorm(100, 0.5, 1) + 5, rnorm(100, 0.2, 2) - 2)
-#' mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, X = X, s0.r = diag(2),
+#' mbsts.2 <- as.mbsts(y = y, components = c("trend", "seasonal"),
+#'                     seas.period = 7, X = X, s0.r = diag(2),
 #'                     s0.eps = diag(2), niter = 100, burn = 10)
 #' newdata <- cbind(rnorm(30), rt(30, 2))
 #' pred.2 <- predict(mbsts.2, newdata = newdata)

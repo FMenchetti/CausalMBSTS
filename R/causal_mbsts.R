@@ -147,9 +147,10 @@
 #'   }
 #'
 #' # Causal effect estimation
-#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7, X = X,
-#'                         dates = dates, int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3),
-#'                         niter = 100, burn = 10, horizon = as.Date(c('2019-12-05','2020-02-13')))
+#' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
+#'                         X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3),
+#'                         s0.eps = 0.1*diag(3),niter = 100, burn = 10,
+#'                         horizon = as.Date(c('2019-12-05','2020-02-13')))
 #' summary(causal.1)
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)

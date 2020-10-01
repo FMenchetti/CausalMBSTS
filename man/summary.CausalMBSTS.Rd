@@ -4,16 +4,18 @@
 \alias{summary.CausalMBSTS}
 \title{Summary of causal effect estimation results obtained with \code{CausalMBSTS}}
 \usage{
-\method{summary}{CausalMBSTS}(x)
+\method{summary}{CausalMBSTS}(object, ...)
 }
 \arguments{
-\item{x}{An object of class 'CausalMBSTS', a result of a call to \code{\link{CausalMBSTS}}.}
+\item{object}{An object of class 'CausalMBSTS', a result of a call to \code{\link{CausalMBSTS}}.}
+
+\item{...}{further arguments passed to or from other methods (currently not used).}
 }
 \value{
 Returns an object of class \code{summary.CausalMBSTS}, which is a list of data frames corresponding to each
 date provided in \code{horizon} (or its default value) with the following columns:
   \item{mean}{Estimated average causal effect}
-  \item{lower}{Lower bound of the two-sided (1-\code{alpha})\% credible interval. Note that \code{alpha} parameter is inherited from the object \code{x}.}
+  \item{lower}{Lower bound of the two-sided (1-\code{alpha})\% credible interval. Note that \code{alpha} parameter is inherited from the object \code{object}.}
   \item{upper}{Upper bound of the two-sided (1-\code{alpha})\% credible interval}
   \item{cum.sum}{Pointwise effect}
   \item{cum.lower}{Lower bound of a (1-\code{alpha})\% credible interval of the pointwise effect}
