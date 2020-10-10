@@ -40,7 +40,7 @@
 #' # Adding a fictional intervention and four covariates. To illustrate the
 #' # functioning of Bayesian model selection, one covariate is assumed to be
 #' # unrelated to y.
-#' int.date <- as.Date('2019-11-05')
+#' int.date <- as.Date('2019-04-01')
 #' y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
 #' x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
 #' x2 <- y[,2]*0.1 + rnorm(dim(y)[1],0,0.5)

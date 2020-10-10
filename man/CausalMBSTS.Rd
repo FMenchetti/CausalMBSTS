@@ -155,7 +155,7 @@ dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 200)
 # to the outcome but unaffected by the intervention). To illustrate the
 # functioning of Bayesian model selection, one covariate is assumed to be
 # unrelated to y.
-int.date <- as.Date('2019-11-05')
+int.date <- as.Date('2019-04-01')
 y.new <- y; y.new[dates >= int.date, ] <- y.new[dates >= int.date, ]*1.3
 x1 <- y[,1]*0.5 + y[,2]*0.3 + y[,3]*0.1
 x2 <- y[,2]*0.1 + rnorm(dim(y)[1],0,0.5)
@@ -178,7 +178,7 @@ for(i in 1:dim(X)[2]){
 causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
                         X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3),
                         s0.eps = 0.1*diag(3),niter = 80, burn = 10,
-                        horizon = s.Date(c('2019-04-08','2019-07-28')))
+                        horizon = as.Date(c('2019-04-08','2019-07-28')))
 summary(causal.1)
 
 ## Example 2 (weekly data, local level + cycle, d = 2)
