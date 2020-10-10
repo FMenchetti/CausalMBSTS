@@ -118,10 +118,10 @@
 #' ## Example 1 (daily data, d = 3, local level + seasonal + covariates)
 #' # Generating a panel of observations and a vector of dates
 #' set.seed(1)
-#' y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
-#'            seq(100.25,200,by=0.25)*0.05 + rnorm(400),
-#'            seq(1,400,by=1)*(-0.01) + rnorm(400, 0, 0.5))
-#' dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 400)
+#' y <- cbind(seq(0.5,100,by=0.5)*0.1 + rnorm(200),
+#'            seq(100.25,150,by=0.25)*0.05 + rnorm(200),
+#'            seq(1,200,by=1)*(-0.01) + rnorm(200, 0, 0.5))
+#' dates <- seq.Date(from = as.Date('2019-01-10'),by = "days", length.out = 200)
 #'
 #' # Adding a fictional intervention and four covariates (they should be related
 #' # to the outcome but unaffected by the intervention). To illustrate the
@@ -149,8 +149,8 @@
 #' # Causal effect estimation
 #' causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
 #'                         X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3),
-#'                         s0.eps = 0.1*diag(3),niter = 100, burn = 10,
-#'                         horizon = as.Date(c('2019-12-05','2020-02-13')))
+#'                         s0.eps = 0.1*diag(3),niter = 80, burn = 10,
+#'                         horizon = s.Date(c('2019-04-08','2019-07-28')))
 #' summary(causal.1)
 #'
 #' ## Example 2 (weekly data, local level + cycle, d = 2)
