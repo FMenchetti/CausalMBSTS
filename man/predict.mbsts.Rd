@@ -37,9 +37,9 @@ Note that NA values are not allowed in the new regressor matrix.
 }
 \examples{
 ## Example 1 :
-y <- cbind(seq(0.5,200,by=0.5)*0.1 + rnorm(400),
-           seq(100.25,200,by=0.25)*0.05 + rnorm(400),
-           rnorm(400, 5,1))
+y <- cbind(seq(0.5,100,by=0.5)*0.1 + rnorm(200),
+           seq(100.25,150,by=0.25)*0.05 + rnorm(200),
+           rnorm(200, 5,1))
 mbsts.1 <- as.mbsts(y = y, components = c("trend", "seasonal"), seas.period = 7, s0.r = diag(3),
                     s0.eps = diag(3), niter = 100, burn = 10)
 pred.1 <- predict(mbsts.1, steps.ahead = 10)
