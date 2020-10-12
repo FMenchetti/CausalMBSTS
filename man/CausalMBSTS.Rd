@@ -177,7 +177,7 @@ for(i in 1:dim(X)[2]){
 # Causal effect estimation
 causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
                         X = X, dates = dates, int.date = int.date, s0.r = 0.1*diag(3),
-                        s0.eps = 0.1*diag(3),niter = 80, burn = 10,
+                        s0.eps = 0.1*diag(3),niter = 50, burn = 5,
                         horizon = as.Date(c('2019-04-08','2019-07-28')))
 summary(causal.1)
 

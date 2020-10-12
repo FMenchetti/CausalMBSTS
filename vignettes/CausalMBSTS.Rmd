@@ -62,7 +62,7 @@ par(mar = c(2,2,2,2)) ; par(mfrow = c(2,4))
 plot(causal.2, int.date = int.date, type = "ppchecks")
 ```
 
-Starting from the left, the above plots show: the density of observed data vs. the posterior predictive mean (good overlap means that the model fits the data); ii) observed maximum compared to the distribution of the maximum from the posterior draws (extreme p-values indicate that the model produces extreme observations); iii) Normal QQ-Plot of standardized residuals; iv) autocorrelation function of standardized residuals. In this case, the posterior predictive checks are in favor of the model, but it is also important to check the convergence of the Markov chain with some trace plots (for illustration purposes, only the trace plots of the variance-covariance matrices of the observation and trend disturbances are displayed).
+Starting from the left, the above plots show: the density of observed data vs. the posterior predictive mean (good overlap means that the model fits the data); ii) observed maximum compared to the distribution of the maximum from the posterior draws (extreme p-values indicate that the model produces extreme observations); iii) Normal QQ-Plot of standardized residuals; iv) autocorrelation function of standardized residuals. In this case, the posterior predictive checks are in favor of the model, but it is also important to check the convergence of the Markov chain (for illustration purposes, only the trace plots of the variance-covariance matrices of the observation and trend disturbances are displayed).
 
 ```{r, fig.height = 3, fig.width = 8}
 # Trace plots

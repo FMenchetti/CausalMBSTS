@@ -62,8 +62,8 @@ X <- cbind(x1, x2, x3, x4)
 # Model definition
 causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,
                         X = X, dates = dates, int.date = int.date,
-                        s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 80,
-                        burn = 10, horizon = as.Date(c('2019-04-08','2019-07-28')))
+                        s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3), niter = 50,
+                        burn = 5, horizon = as.Date(c('2019-04-08','2019-07-28')))
 
 ## Plotting
 plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
