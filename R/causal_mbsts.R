@@ -115,6 +115,9 @@
 #' @export
 #'
 #' @examples
+#' ## Note: The following are toy examples, for a proper analysis we recommend to run
+#' ##       at least 1000 iterations and check the convergence of the Markov chain
+#'
 #' ## Example 1 (daily data, d = 3, local level + seasonal + covariates)
 #' # Generating a panel of observations and a vector of dates
 #' set.seed(1)
@@ -171,7 +174,6 @@
 #'                         dates = dates, int.date = int.date, s0.r = 0.01*diag(2),
 #'                         s0.eps = 0.1*diag(2), niter = 100, burn = 10)
 #' summary(causal.2)
-
 
 
 CausalMBSTS <- function(y, components, seas.period = NULL, cycle.period = NULL,

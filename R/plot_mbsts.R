@@ -30,6 +30,8 @@
 #' @export
 #'
 #' @examples
+#' ## Note: The following are toy examples, for a proper analysis we recommend to run
+#' ##       at least 1000 iterations and check the convergence of the Markov chain
 #'
 #' ## Example 1 (daily data, d = 3, local level + seasonal + covariates)
 #' y <- cbind(seq(0.5,100,by=0.5)*0.1 + rnorm(200),

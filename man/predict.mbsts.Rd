@@ -36,6 +36,9 @@ regression component, then the new matrix of predictors 'newdata' must be provid
 Note that NA values are not allowed in the new regressor matrix.
 }
 \examples{
+## Note: The following are toy examples, for a proper analysis we recommend to run
+##       at least 1000 iterations and check the convergence of the Markov chain
+
 ## Example 1 :
 y <- cbind(seq(0.5,100,by=0.5)*0.1 + rnorm(200),
            seq(100.25,150,by=0.25)*0.05 + rnorm(200),

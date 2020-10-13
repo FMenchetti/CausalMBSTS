@@ -143,6 +143,9 @@ Run \code{vignette("CausalMBSTS")} for a detailed example.
 For further details see Menchetti & Bojinov (2020).}
 }
 \examples{
+## Note: The following are toy examples, for a proper analysis we recommend to run
+##       at least 1000 iterations and check the convergence of the Markov chain
+
 ## Example 1 (daily data, d = 3, local level + seasonal + covariates)
 # Generating a panel of observations and a vector of dates
 set.seed(1)
