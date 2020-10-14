@@ -125,7 +125,7 @@ if covariates are provided, the matrix of regression coefficients. Because of co
 priors placed on the variance-covariance matrices of the error terms are Inverse-Wishart
 distributions and the arguments (nu0.eps, s0.eps) and (nu0.r, s0.r) regulate their hyperparameters.
 
-The regression coeffiecients are assumed to follow a matrix-Normal prior and, to incorporate
+The regression coefficients are assumed to follow a matrix-Normal prior and, to incorporate
 a sparsity assumption, the prior mean is set to zero and a vector selecting the relevant
 covariates is introduced with a data augmentation step.
 
