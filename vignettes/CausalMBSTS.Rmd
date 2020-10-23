@@ -43,6 +43,7 @@ causal.2 <- CausalMBSTS(y, components = c("trend", "cycle"), cycle.period = 75,
 summary(causal.2)
 
 # Causal effect plot
+oldpar <- par(no.readonly = TRUE)
 par(mfrow=c(1,2))
 plot(causal.2, int.date = int.date, type = "impact")
 
@@ -101,6 +102,7 @@ new.dates <- seq.Date(from = as.Date("2015-06-01"), by = "week", length.out=248)
 plot(y = y.mean[,1], x = new.dates, type="l", col="cadetblue")
 lines(y = y.mean[,2], x = new.dates, col = "orange")
 abline( v = dates[222], col = "red")
+par(oldpar)
 ```
 
 ## Further readings

@@ -167,6 +167,7 @@ x4 <- rnorm(dim(y)[1], 5, 10)
 X <- cbind(x1, x2, x3, x4)
 
 # Some plots
+oldpar <- par(no.readonly = TRUE)
 par(mfrow=c(1,3))
 for(i in 1:dim(y.new)[2]){
   plot(y.new[,i], x = dates, type='l', col='cadetblue', xlab='', ylab='', main= bquote(Y[.(i)]))
@@ -176,6 +177,7 @@ par(mfrow=c(1,4))
 for(i in 1:dim(X)[2]){
   plot(X[,i], type='l', col = 'darkgreen', x = dates, xlab='', ylab='', main = bquote(x[.(i)]))
   }
+par(oldpar)
 
 # Causal effect estimation
 causal.1 <- CausalMBSTS(y.new, components = c("trend", "seasonal"), seas.period = 7,

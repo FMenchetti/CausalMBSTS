@@ -14,3 +14,12 @@
   Maintainer: 'Fiammetta Menchetti <fiammetta.menchetti@gmail.com>'
   
 * This is a new release.
+
+## Resubmission #1
+
+This is a resubmission. The following changes were made:
+
+* Package title was shortened to 49 characters ("MBSTS Models for Causal Inference and Forecasting")
+* T/F were replaces with TRUE/FALSE
+* Object names such as "T" were replaced with "Tt"
+* Places in examples and vignette where user's par() values were modified were then reset back

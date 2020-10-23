@@ -59,11 +59,13 @@
 #' ## Plotting
 #' plot(causal.1, int.date = int.date, type = 'inclusion.probs', prob = 0.1)
 #' # as expected, x4 is rarely included in the model
+#' oldpar <- par(no.readonly = TRUE)
 #' par(mar = c(2,2,2,2))
 #' par(mfrow=c(2,3))
 #' plot(causal.1, int.date = int.date, type = c('impact', 'forecast'))
 #' par(mfrow=c(3,4))
 #' plot(causal.1, type = 'ppchecks', int.date = int.date)
+#' par(oldpar)
 #'
 #' ## Example 2
 #' set.seed(1)
@@ -80,10 +82,12 @@
 #'                         niter = 100, burn = 10)
 #'
 #' # Plotting
+#' oldpar <- par(no.readonly = TRUE)
 #' par(mfrow=c(2,4))
 #' plot(causal.2, type = 'ppchecks', int.date = int.date)
 #' par(mfrow=c(2,2))
 #' plot(causal.2, type = c('impact','forecast'), int.date = int.date)
+#' par(oldpar)
 
 
 plot.CausalMBSTS <- function(x, int.date, type = c("impact", "forecast", "ppchecks"), prob = NULL, ...) {

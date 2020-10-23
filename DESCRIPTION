@@ -1,6 +1,6 @@
 Package: CausalMBSTS
 Type: Package
-Title: Multivariate Bayesian Structural Time Series Models for Causal Inference and Forecasting 
+Title: MBSTS Models for Causal Inference and Forecasting 
 Version: 0.1.0
 Authors@R: c(
     person("Iavor", "Bojinov", email = "ibojinov@hbs.edu", role = c("aut")),
