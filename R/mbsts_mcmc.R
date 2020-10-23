@@ -62,7 +62,7 @@
 #'   \item{X}{Predictor matrix (if provided).}
 #'   \item{y}{Matrix of observations.}
 #'   \item{Z}{(d x m) selection matrix of the observation equation.}
-#'   \item{T}{(m x m) matrix of the state equation.}
+#'   \item{Tt}{(m x m) matrix of the state equation.}
 #'   \item{R}{(m x r) matrix selecting the state disturbances.}
 #'   \item{niter}{Number of mcmc iterations.}
 #'   \item{burn}{Burn-in.}
@@ -197,7 +197,7 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
             #      with all elements equal 1 (meaning that at first all regressors are selected).
             #      Given this selection, the log-likelihood is computed.
             z <- rep.int(1, dim(X)[2])
-            lpy.c <- lpy.X(y.star, X[, z == 1, drop = F], H = H, nu0.eps = nu0.eps, s0.eps = s0.eps)
+            lpy.c <- lpy.X(y.star, X[, z == 1, drop = FALSE], H = H, nu0.eps = nu0.eps, s0.eps = s0.eps)
 
             # 3.3. exploring the space of all possible models: at each step we change one element of z
             #      from 1 to 0 while the others z_-j are held fixed and compute the log-likelihood of the
@@ -209,7 +209,7 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
             for (j in sample(1:dim(X)[2])) {
                 zp <- z
                 zp[j] <- 1 - zp[j]
-                lpy.p <- lpy.X(y.star, X[, zp == 1, drop = F], H = H[zp == 1, zp == 1, drop = F],
+                lpy.p <- lpy.X(y.star, X[, zp == 1, drop = FALSE], H = H[zp == 1, zp == 1, drop = FALSE],
                   nu0.eps = nu0.eps, s0.eps = s0.eps)
                 re <- (lpy.p - lpy.c) * (-1)^(zp[j] == 0)
                 z[j] <- rbinom(1, 1, 1/(1 + exp(-re)))
@@ -225,8 +225,8 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
                 nu.eps <- nu0.eps + t
                 s.eps <- s0.eps + crossprod(y.star)
             } else {
-                W <- inv(crossprod(X[, z == 1, drop = F]) + inv(H[z == 1, z == 1, drop = F]))
-                M <- tcrossprod(W, X[, z == 1, drop = F]) %*% y.star
+                W <- inv(crossprod(X[, z == 1, drop = FALSE]) + inv(H[z == 1, z == 1, drop = FALSE]))
+                M <- tcrossprod(W, X[, z == 1, drop = FALSE]) %*% y.star
                 nu.eps <- nu0.eps + t
                 s.eps <- s0.eps + crossprod(y.star) - crossprod(M, inv(W)) %*% M
             }
@@ -241,7 +241,7 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
             if (sum(z) == 0) {
                 beta <- matrix(0, nrow = ncol(X), ncol = d)
             } else {
-                beta <- rmatrixnorm(n = 1, mean = M, L = W, R = Sigma.eps, force = T)
+                beta <- rmatrixnorm(n = 1, mean = M, L = W, R = Sigma.eps, force = TRUE)
             }
         }
 
@@ -262,10 +262,10 @@ mcmc <- function(Smodel, X = NULL, H = NULL, nu0.r = NULL, s0.r , nu0.eps = NULL
     if (!is.null(X)) {
         list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples,
             Sigma.r = Sigma.states, Sigma.eps = Sigma.obs, Z.beta = Z, beta = BETA, X = X, y = y,
-            Z = Smodel$Z, T = Smodel$T, R = Smodel$R, niter = niter, burn = burn)
+            Z = Smodel$Z, Tt = Smodel$T, R = Smodel$R, niter = niter, burn = burn)
     } else {
         list <- list(eta.samples = eta.samples, eps.samples = eps.samples, states.samples = states.samples,
-            Sigma.r = Sigma.states, Sigma.eps = Sigma.obs, y = y, Z = Smodel$Z, T = Smodel$T, R = Smodel$R,
+            Sigma.r = Sigma.states, Sigma.eps = Sigma.obs, y = y, Z = Smodel$Z, Tt = Smodel$T, R = Smodel$R,
             niter = niter, burn = burn)
     }
 

@@ -48,7 +48,7 @@
 #'   \item{X}{Predictor matrix (if provided).}
 #'   \item{y}{Matrix of observations.}
 #'   \item{Z}{(d x m) selection matrix of the observation equation.}
-#'   \item{T}{(m x m) matrix of the state equation.}
+#'   \item{Tt}{(m x m) matrix of the state equation.}
 #'   \item{R}{(m x r) matrix selecting the state disturbances.}
 #'   \item{niter}{Number of mcmc iterations.}
 #'   \item{burn}{Burn-in.}
@@ -70,8 +70,8 @@
 #'                     X = X, s0.r = diag(2), s0.eps = diag(2), niter = 100, burn = 10)
 
 as.mbsts <- function(y, components, seas.period = NULL, cycle.period = NULL, X = NULL,
-                     H = NULL, nu0.r = NULL, s0.r = 0.01 * var(y, na.rm = T), nu0.eps = NULL,
-                     s0.eps = 0.01 * var(y, na.rm = T), niter, burn, ping = NULL){
+                     H = NULL, nu0.r = NULL, s0.r = 0.01 * var(y, na.rm = TRUE), nu0.eps = NULL,
+                     s0.eps = 0.01 * var(y, na.rm = TRUE), niter, burn, ping = NULL){
 
   ## Parameter checks
   if(!is.matrix(y) && !is.data.frame(y)) stop("`y` must be a matrix or data.frame")

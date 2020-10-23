@@ -220,7 +220,7 @@ plotChecks <- function(CausalMBSTS, int.date) {
 
         # Residual plots
         y.rep <- matrix(y[ind, i], nrow(y[ind, ]), (CausalMBSTS$mcmc$niter - CausalMBSTS$mcmc$burn),
-            byrow = F)
+            byrow = FALSE)
         res <- (y.rep - (post.pred[, i, ] - CausalMBSTS$mcmc$eps.samples[, i, ]))
         std.res <- t(apply(res, 1, FUN = "/", sqrt(CausalMBSTS$mcmc$Sigma.eps[i, i, ])))
         qqnorm(rowMeans(std.res), main = paste0("Residual QQ-plot, Y", i))

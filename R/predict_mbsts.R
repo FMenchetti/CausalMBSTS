@@ -94,7 +94,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
     rr <- dim(mbsts$R)[2]  # tot number of state disurbances
     d <- dim(mbsts$y)[2]  # number of time series
     #r <- rr/d  # number of state disturbances for each time series
-    M <- dim(mbsts$T)[1]  # tot number of states
+    M <- dim(mbsts$Tt)[1]  # tot number of states
 
     if (is.null(mbsts$X)) {
         step <- steps.ahead
@@ -148,7 +148,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
         #          because we sampled from the full conditional p(alpha_t | Y_t, beta, Sigma.eps, z, Sigma.r).
         #          Thus, to sample from y_t+k | y_t we should 'recover' the missing dependence structure
         #          p(alpha_t+k,...,alpha_t+1 | theta') where theta' is our 'old' theta, that is
-        #          theta' = alpha_t, beta, Sigma.eps, z, Sigma.r. More details in the pdf.
+        #          theta' = alpha_t, beta, Sigma.eps, z, Sigma.r. More details in the paper.
         #          Conversely, y*_t+k =  y_t+k - Z alpha_t+k is independent of y*_t given theta',
         #          because there's no more time component and we can just write y*.
         #          During the MCMC we sampled from the joint posterior p(beta,Sigma.eps,z|y*),
@@ -160,7 +160,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
         # 2.1. Sampling new states
 
         eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.r[, , i]), nrow = rr)
-        states.new[1, , i] <- mbsts$T[, , 1] %*% matrix(mbsts$states.samples[last, , i], M) + mbsts$R[,
+        states.new[1, , i] <- mbsts$Tt[, , 1] %*% matrix(mbsts$states.samples[last, , i], M) + mbsts$R[,
             , 1] %*% eta.new
 
         ind <- if (step > 1) {
@@ -170,7 +170,7 @@ predict.mbsts <- function(object, steps.ahead, newdata = NULL, ...) {
         }
         for (j in ind) {
             eta.new <- matrix(mvrnorm(1, rep(0, rr), mbsts$Sigma.r[, , i]), nrow = rr)
-            states.new[j, , i] <- mbsts$T[, , 1] %*% matrix(states.new[j - 1, , i], nrow = M) + mbsts$R[,
+            states.new[j, , i] <- mbsts$Tt[, , 1] %*% matrix(states.new[j - 1, , i], nrow = M) + mbsts$R[,
                 , 1] %*% eta.new
         }
 

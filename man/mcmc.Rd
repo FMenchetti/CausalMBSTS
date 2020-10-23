@@ -68,7 +68,7 @@ An object of class 'mbsts' which is a list with the following components:
   \item{X}{Predictor matrix (if provided).}
   \item{y}{Matrix of observations.}
   \item{Z}{(d x m) selection matrix of the observation equation.}
-  \item{T}{(m x m) matrix of the state equation.}
+  \item{Tt}{(m x m) matrix of the state equation.}
   \item{R}{(m x r) matrix selecting the state disturbances.}
   \item{niter}{Number of mcmc iterations.}
   \item{burn}{Burn-in.}
