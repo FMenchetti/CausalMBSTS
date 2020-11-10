@@ -17,6 +17,10 @@ Aside from causal inference, the package can also be used for forecasting. This 
 ```{r}
 # Get CausalMBSTS from GitHub
 devtools::install_github("FMenchetti/CausalMBSTS", build_vignettes = TRUE)
+
+# Get CausalMBSTS from CRAN
+install.packages("CausalMBSTS")
+library(CausalMBSTS)
 ```
 
 ## Further readings
