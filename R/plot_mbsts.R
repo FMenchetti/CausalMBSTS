@@ -133,10 +133,13 @@ plotImpact <- function(CausalMBSTS, int.date) {
             ylim <- c(min(CausalMBSTS$lower.general[, i]), max(CausalMBSTS$upper.general[, i]))
             x <- dates[dates >= int.date]
             main <- paste("Pointwise effect ", "Y", i, sep = "")
-            plot(y = CausalMBSTS$mean.general[, i], x = x, type = "l", col = "blue", ylim = ylim,
-                main = main, ylab = "", xlab = "")
-            lines(y = CausalMBSTS$upper.general[, i], x = x, lty = 2)
-            lines(y = CausalMBSTS$lower.general[, i], x = x, lty = 2)
+            plot(y = CausalMBSTS$upper.general[, i], x = x, type = "l", ylim = ylim,
+                 main = main, ylab = "", xlab = "")
+            lines(y = CausalMBSTS$lower.general[, i], x = x)
+            polygon(c(x, rev(x)), c(CausalMBSTS$lower.general[, i], rev(CausalMBSTS$upper.general[, i])),
+                    col = "grey", border = "grey")
+            lines(y = CausalMBSTS$mean.general[, i], x = x, col = "blue")
+
         }
     } else {
         for (j in 1:length(CausalMBSTS$mean.general)) {
@@ -148,10 +151,13 @@ plotImpact <- function(CausalMBSTS, int.date) {
             for (i in 1:d) {
                 ylim <- c(min(CausalMBSTS$lower.general[[j]][, i]), max(CausalMBSTS$upper.general[[j]][,i]))
                 main <- paste("Pointwise effect ", "Y", i, ", horizon ", j, sep = "")
-                plot(y = CausalMBSTS$mean.general[[j]][, i], x = x, type = "l", col = "blue", ylim = ylim,
-                  main = main, ylab = "", xlab = "")
-                lines(y = CausalMBSTS$upper.general[[j]][, i], x = x, lty = 2)
-                lines(y = CausalMBSTS$lower.general[[j]][, i], x = x, lty = 2)
+                plot(y = CausalMBSTS$upper.general[[j]][, i], x = x, type = "l", ylim = ylim,
+                     main = main, ylab = "", xlab = "")
+                lines(y = CausalMBSTS$lower.general[[j]][, i], x = x)
+                polygon(c(x, rev(x)), c(CausalMBSTS$lower.general[[j]][, i], rev(CausalMBSTS$upper.general[[j]][, i])),
+                        col = "grey", border = "grey")
+                lines(CausalMBSTS$mean.general[[j]][, i], x = x, col = "blue")
+
             }
         }
     }
@@ -175,7 +181,7 @@ plotForecast <- function(CausalMBSTS, int.date) {
             yi <- y[start:end, i]
             ylim <- c(min(yi, post.mean[start:end, i]), max(yi, post.mean[start:end, i]))
             main <- paste("Forecasted series ", "Y", i, sep = "")
-            plot(y = yi, x = x, type = "l", ylim = ylim, ylab = "", xlab = "", main = main)
+            plot(y = yi, x = x, type = "l", ylim = ylim, ylab = "", xlab = "", main = main, col = "grey")
             lines(post.mean[start:end, i], col = "blue", x = x)
             abline(v = int.date, col = "red")
         }
@@ -190,7 +196,7 @@ plotForecast <- function(CausalMBSTS, int.date) {
                 ylim <- c(min(yi, post.mean[start:(end - 1), i]), max(yi, post.mean[start:(end -
                   1), i]))
                 main <- paste("Forecasted series ", "Y", i, ", horizon ", j, sep = "")
-                plot(y = yi, x = x, type = "l", ylim = ylim, ylab = "", xlab = "", main = main)
+                plot(y = yi, x = x, type = "l", ylim = ylim, ylab = "", xlab = "", main = main, col = "grey")
                 lines(post.mean[start:(end - 1), i], col = "blue", x = x)
                 abline(v = int.date, col = "red")
             }
