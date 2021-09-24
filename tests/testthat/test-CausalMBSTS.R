@@ -14,7 +14,7 @@ test_that("CausalMBSTS works", {
                             int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3),
                             niter = 10, burn = 1, horizon = as.Date(c('2019-02-19','2019-03-10')))
     expect_equal(causal.1, ## from refmod.Rdata
-                 causal.2)
+                 causal.2, tolerance = 2e-1)
 })
 
 test_that("CausalMBSTS works with data.frame input", {
@@ -28,5 +28,5 @@ test_that("CausalMBSTS works with data.frame input", {
                             int.date = int.date, s0.r = 0.1*diag(3), s0.eps = 0.1*diag(3),
                             niter = 10, burn = 1, horizon = as.Date(c('2019-02-19','2019-03-10')))
     expect_equal(causal.1, ## from refmod.Rdata
-                 causal.3)
+                 causal.3, tolerance = 2e-1)
 })
