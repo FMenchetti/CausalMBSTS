@@ -1,7 +1,7 @@
 Package: CausalMBSTS
 Type: Package
 Title: MBSTS Models for Causal Inference and Forecasting 
-Version: 0.1.0
+Version: 0.1.1
 Authors@R: c(
     person("Iavor", "Bojinov", email = "ibojinov@hbs.edu", role = c("aut")),
     person("Fiammetta", "Menchetti", email = "fiammetta.menchetti@gmail.com", role = c("aut", "cre")),
